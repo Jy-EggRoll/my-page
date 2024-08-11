@@ -18,4 +18,4 @@
 
 6. **其他资源文件**：如视频、音频等，通常也会放在单独的文件夹中，例如`videos`或`audio`文件夹。
 
-本网页Logo为个人自行绘制，文本字体使用开源的“[霞骛文楷字体](https://github.com/lxgw/LxgwWenKai)”，应用了开源的“[霞鹜文楷屏幕阅读版 网络字体仓库](https://github.com/CMBill/lxgw-wenkai-screen-web)”。
+本网页Logo为个人自行绘制。

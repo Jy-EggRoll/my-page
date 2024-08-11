@@ -1,9 +1,9 @@
+/* 设置body的背景颜色 */
 body {
-    font-family: "LXGW WenKai Screen";
-    font-weight: bold;
     background-color: #F5F5F5;
 }
 
+/* 设置header的背景颜色、宽度、内边距、文本对齐方式和阴影效果 */
 header {
     background-color: #FFD700;
     width: 100%;
@@ -12,11 +12,13 @@ header {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* 设置header中图片的宽度和高度 */
 header img {
     width: 100px;
     height: 100px;
 }
 
+/* 设置main的宽度、最大宽度、背景颜色、内边距、上外边距、阴影效果和圆角 */
 main {
     width: 80%;
     max-width: 800px;
@@ -27,21 +29,25 @@ main {
     border-radius: 8px;
 }
 
+/* 设置section的下外边距 */
 section {
     margin-bottom: 20px;
 }
 
+/* 设置h1和h2的颜色 */
 h1,
 h2 {
     color: #333;
 }
 
+/* 设置p的颜色、行高和字体大小 */
 p {
     color: #666;
     line-height: 1.6;
-    font-size: 24px;
+    font-size: 20px;
 }
 
+/* 设置footer的上外边距、内边距、文本对齐方式、颜色和背景颜色 */
 footer {
     margin-top: 20px;
     padding: 20px;
@@ -51,10 +57,12 @@ footer {
     width: 100%;
 }
 
+/* 设置a的颜色 */
 a {
     color: #FFD700;
 }
 
+/* 设置a在hover状态下的文本装饰 */
 a:hover {
-    text-decoration: underline;
+    color: aqua;
 }

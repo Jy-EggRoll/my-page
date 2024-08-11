@@ -18,30 +18,4 @@
 
 6. **其他资源文件**：如视频、音频等，通常也会放在单独的文件夹中，例如`videos`或`audio`文件夹。
 
-以下是一个简单的文件结构示例：
-
-```
-my-website/
-├── index.html
-├── css/
-│   └── styles.css
-├── js/
-│   └── scripts.js
-├── images/
-│   ├── logo.png
-│   └── background.jpg
-├── fonts/
-│   └── custom-font.ttf
-└── videos/
-    └── intro.mp4
-```
-
-在这个结构中：
-- `index.html` 是网页的主文件。
-- `css/styles.css` 包含了网页的样式定义。
-- `js/scripts.js` 包含了网页的交互脚本。
-- `images/` 文件夹包含了网页中使用的所有图片。
-- `fonts/` 文件夹包含了网页中使用的自定义字体。
-- `videos/` 文件夹包含了网页中使用的视频文件。
-
-这样的文件结构清晰且易于维护，适合大多数中小型网页项目。
+本网页Logo为个人自行绘制，文本字体使用开源的“[霞骛文楷字体](https://github.com/lxgw/LxgwWenKai)”，应用了开源的“[霞鹜文楷屏幕阅读版 网络字体仓库](https://github.com/CMBill/lxgw-wenkai-screen-web)”。

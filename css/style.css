@@ -53,11 +53,12 @@ footer {
 }
 
 a {
-    color: #ffbf00fe;
+    font-size: 18px;
+    color: orange;
 }
 
 a:hover {
-    color: #ff8000;
+    color: rgb(224, 146, 0);
 }
 
 #copyright {

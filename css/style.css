@@ -1,3 +1,8 @@
+*::selection {
+    background-color: orange;
+    color: antiquewhite;
+}
+
 body {
     background-color: #F5F5F5;
     justify-content: center;
@@ -60,6 +65,7 @@ a {
 a:hover {
     color: rgb(224, 146, 0);
 }
+
 
 #copyright {
     font-size: 14px;

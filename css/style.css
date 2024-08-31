@@ -1,6 +1,7 @@
 *::selection {
     background-color: orange;
     color: antiquewhite;
+
 }
 
 body {
@@ -44,7 +45,9 @@ h2 {
 
 p {
     color: #666;
-    line-height: 1.6;
+
+    /* 对于段落内容，采用黄金比例行高 */
+    line-height: 1.618;
     font-size: 18px;
 }
 
@@ -69,9 +72,6 @@ a:hover {
 
 #copyright {
     font-size: 14px;
-}
-
-#copyright {
     color: rgba(255, 235, 205, 0.521);
 }
 

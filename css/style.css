@@ -49,6 +49,9 @@ p {
     /* 对于段落内容，采用黄金比例行高 */
     line-height: 1.618;
     font-size: 18px;
+
+    /* 为段落内容采用两端对齐 */
+    text-align: justify;
 }
 
 footer {
@@ -79,4 +82,12 @@ section {
     background-color: #F5F5F5;
     padding: 2%;
     border-radius: 20px;
+}
+
+.reference {
+    /* 让这部分内容有灰色左边界 */
+    border-left: 5px solid #CCC;
+
+    /* 让这部分内容有一定的缩进 */
+    padding-left: 10px;
 }

@@ -12,11 +12,11 @@ nav {
 }
 
 .a a {
-    width: 150px;
+    width: 90px;
     height: 60px;
     line-height: 60px;
     text-align: center;
-    font-size: 24px;
+    font-size: 20px;
     text-decoration: none;
     color: black;
 }
@@ -24,7 +24,7 @@ nav {
 .b {
     position: absolute;
     left: 0;
-    width: 150px;
+    width: 90px;
     height: 60px;
     border-radius: 20px;
     background-color: #ffd900a8;
@@ -37,9 +37,9 @@ nav {
 }
 
 .a a:nth-child(2):hover~.b {
-    left: 150px;
+    left: 90px;
 }
 
 .a a:nth-child(3):hover~.b {
-    left: 300px;
+    left: 180px;
 }

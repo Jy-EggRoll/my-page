@@ -1,7 +1,15 @@
+@font-face {
+    font-family: TsangerJinKai03-W04;
+    src: url(../fonts/仓耳今楷03-W04.ttf);
+}
+
+* {
+    font-family: "TsangerJinKai03-W04";
+}
+
 *::selection {
     background-color: orange;
     color: antiquewhite;
-
 }
 
 body {
@@ -73,7 +81,8 @@ a:hover {
 }
 
 
-#copyright {
+
+.copyright {
     font-size: 14px;
     color: rgba(255, 235, 205, 0.521);
 }

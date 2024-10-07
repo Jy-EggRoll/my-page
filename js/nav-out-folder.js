@@ -1,4 +1,4 @@
-fetch('navigation-out-folder.html')
+fetch('https://jy-eggroll.github.io/my-page/html/navigation-out-folder.html')
     .then(response => response.text())
     .then(data => {
         document.getElementById('navigation-out-folder').innerHTML = data;

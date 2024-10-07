@@ -1,4 +1,4 @@
-fetch('/html/navigation-out-folder.html')
+fetch('navigation-out-folder.html')
     .then(response => response.text())
     .then(data => {
         document.getElementById('navigation-out-folder').innerHTML = data;

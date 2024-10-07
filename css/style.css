@@ -104,3 +104,7 @@ section {
 .bold {
     font-weight: 900;
 }
+
+.music-container {
+    text-align: center;
+}

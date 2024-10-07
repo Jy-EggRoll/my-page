@@ -100,3 +100,7 @@ section {
     /* 让这部分内容有一定的缩进 */
     padding-left: 10px;
 }
+
+.bold {
+    font-weight: 900;
+}

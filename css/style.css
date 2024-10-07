@@ -75,6 +75,8 @@
     a {
         font-size: 18px;
         color: orange;
+        outline: none;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     }
 
     a:hover {
@@ -183,6 +185,8 @@
     a {
         font-size: 18px;
         color: rgb(201, 131, 2);
+        outline: none;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     }
 
     a:hover {

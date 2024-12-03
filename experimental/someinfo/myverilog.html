@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <pre>
+module stopwatch(
+    input clk,         // 1Hz 输入时钟信号
+    input reset,       // 复位信号
+    input stop,        // 停止信号
+    output reg [6:0] seg1,  // 十位数七段显示器控制信号
+    output reg [6:0] seg2   // 个位数七段显示器控制信号
+);
+
+    reg [3:0] ones;  // 个位计数器（BCD码，0~9）
+    reg [2:0] tens;  // 十位计数器（BCD码，0~5）
+
+    // 时钟信号触发更新秒数
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            ones <= 4'b0000;   // 复位个位计数器
+            tens <= 3'b000;    // 复位十位计数器
+        end else if (!stop) begin  // 如果停止信号为低，更新秒表
+            if (ones == 9) begin  // 个位计数器从9回绕
+                ones <= 4'b0000;  // 个位重置
+                if (tens == 5) begin  // 十位计数器从5回绕
+                    tens <= 3'b000;  // 十位重置
+                end else begin
+                    tens <= tens + 1;  // 十位加1
+                end
+            end else begin
+                ones <= ones + 1;  // 个位加1
+            end
+        end
+    end
+
+    // BCD到七段显示器控制信号的映射
+    always @(*) begin
+        // 十位显示
+        case (tens)
+            0: seg1 = 7'b1111110;  // 0
+            1: seg1 = 7'b0110000;  // 1
+            2: seg1 = 7'b1101101;  // 2
+            3: seg1 = 7'b1111001;  // 3
+            4: seg1 = 7'b0110011;  // 4
+            5: seg1 = 7'b1011011;  // 5
+            default: seg1 = 7'b1111110;  // 默认显示0
+        endcase
+
+        // 个位显示
+        case (ones)
+            0: seg2 = 7'b1111110;  // 0
+            1: seg2 = 7'b0110000;  // 1
+            2: seg2 = 7'b1101101;  // 2
+            3: seg2 = 7'b1111001;  // 3
+            4: seg2 = 7'b0110011;  // 4
+            5: seg2 = 7'b1011011;  // 5
+            6: seg2 = 7'b1011111;  // 6
+            7: seg2 = 7'b1110000;  // 7
+            8: seg2 = 7'b1111111;  // 8
+            9: seg2 = 7'b1111011;  // 9
+            default: seg2 = 7'b1111110;  // 默认显示0
+        endcase
+    end
+
+endmodule
+    </pre>
+    <pre>
+module stopwatch(
+    input clk,         // 1kHz 输入时钟信号
+    input reset,       // 复位信号
+    input stop,        // 停止信号
+    output reg [6:0] seg1,  // 十位数七段显示器控制信号
+    output reg [6:0] seg2   // 个位数七段显示器控制信号
+);
+
+    reg [9:0] divider;  // 计数器，用于将1kHz信号分频为1Hz
+    reg [3:0] ones;     // 个位计数器（BCD码，0~9）
+    reg [2:0] tens;     // 十位计数器（BCD码，0~5）
+
+    // 分频器：将1kHz信号分频为1Hz
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            divider <= 10'd0;  // 分频器复位
+        end else if (!stop) begin
+            if (divider == 10'd999) begin  // 1kHz信号分频为1Hz
+                divider <= 10'd0;  // 重置分频器
+            end else begin
+                divider <= divider + 1;  // 分频器计数
+            end
+        end
+    end
+
+    // 每当分频器计数到999时，更新秒数
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            ones <= 4'b0000;  // 复位个位计数器
+            tens <= 3'b000;   // 复位十位计数器
+        end else if (divider == 10'd999 && !stop) begin  // 当分频器计数到999时，更新秒数
+            if (ones == 9) begin  // 个位计数器从9回绕
+                ones <= 4'b0000;  // 个位重置
+                if (tens == 5) begin  // 十位计数器从5回绕
+                    tens <= 3'b000;  // 十位重置
+                end else begin
+                    tens <= tens + 1;  // 十位加1
+                end
+            end else begin
+                ones <= ones + 1;  // 个位加1
+            end
+        end
+    end
+
+    // BCD到七段显示器控制信号的映射
+    always @(*) begin
+        // 十位显示
+        case (tens)
+            0: seg1 = 7'b1111110;  // 0
+            1: seg1 = 7'b0110000;  // 1
+            2: seg1 = 7'b1101101;  // 2
+            3: seg1 = 7'b1111001;  // 3
+            4: seg1 = 7'b0110011;  // 4
+            5: seg1 = 7'b1011011;  // 5
+            default: seg1 = 7'b1111110;  // 默认显示0
+        endcase
+
+        // 个位显示
+        case (ones)
+            0: seg2 = 7'b1111110;  // 0
+            1: seg2 = 7'b0110000;  // 1
+            2: seg2 = 7'b1101101;  // 2
+            3: seg2 = 7'b1111001;  // 3
+            4: seg2 = 7'b0110011;  // 4
+            5: seg2 = 7'b1011011;  // 5
+            6: seg2 = 7'b1011111;  // 6
+            7: seg2 = 7'b1110000;  // 7
+            8: seg2 = 7'b1111111;  // 8
+            9: seg2 = 7'b1111011;  // 9
+            default: seg2 = 7'b1111110;  // 默认显示0
+        endcase
+    end
+
+endmodule
+    </pre>
+</body>
+</html>

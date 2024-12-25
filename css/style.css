@@ -9,8 +9,8 @@
     } */
 
     *::selection {
-        background-color: orange;
-        color: antiquewhite;
+        background-color: #FFB26F;
+        color: #FFF0DC;
     }
 
     body {
@@ -70,20 +70,20 @@
 
     a {
         font-size: 18px;
-        color: orange;
+        color: #FFB26F;
         outline: none;
         -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     }
 
     a:hover {
-        color: rgb(224, 146, 0);
+        color: #DE8F5F;
     }
 
 
 
     .copyright {
         font-size: 14px;
-        color: rgba(255, 235, 205, 0.521);
+        color: #543A14;
     }
 
     section {
@@ -112,8 +112,8 @@
     } */
 
     *::selection {
-        background-color: orange;
-        color: antiquewhite;
+        background-color: #FFB26F;
+        color: #543A14;
     }
 
     body {
@@ -122,7 +122,7 @@
     }
 
     header {
-        background-color: #7d5c40;
+        background-color: #F0BB78;
         width: 90%;
         padding-left: 5%;
         padding-right: 5%;
@@ -150,7 +150,9 @@
         margin-bottom: 20px;
     }
 
-    h1,
+    h1 {
+        color:#242424;
+    }
     h2 {
         color: #cecece;
     }

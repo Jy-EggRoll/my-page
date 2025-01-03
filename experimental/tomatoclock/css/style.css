@@ -1,0 +1,212 @@
+@font-face {
+    font-family: TsangerJinKai03-W04;
+    src: url(../fonts/仓耳今楷03-W04.woff2);
+}
+
+@media (prefers-color-scheme: light) {
+    /* * {
+        font-family: "TsangerJinKai03-W04";
+    } */
+
+    *::selection {
+        background-color: #FFB26F;
+        color: #FFF0DC;
+    }
+
+    body {
+        background-color: #F5F5F5;
+        justify-content: center;
+    }
+
+    header {
+        background-color: #ffdc17;
+        width: 90%;
+        padding-left: 5%;
+        padding-right: 5%;
+        padding-top: 2%;
+        padding-bottom: 1%;
+        text-align: center;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        border-radius: 0 0 30px 30px;
+    }
+
+    header img {
+        width: 100px;
+    }
+
+    main {
+        width: 90%;
+        background-color: #FFF;
+        padding: 5%;
+        margin-top: 40px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 30px;
+    }
+
+    section {
+        margin-bottom: 20px;
+    }
+
+    h1,
+    h2 {
+        color: #333;
+    }
+
+    p {
+        color: #666;
+        line-height: 1.618;
+        font-size: 18px;
+        text-align: justify;
+    }
+
+    footer {
+        width: 100%;
+        margin-top: 20px;
+        padding: 2px;
+        text-align: center;
+        color: #FFF;
+        background-color: #333;
+    }
+
+    a {
+        font-size: 18px;
+        color: #FFB26F;
+        outline: none;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    }
+
+    a:hover {
+        color: #DE8F5F;
+    }
+
+
+
+    .copyright {
+        font-size: 14px;
+        color: #543A14;
+    }
+
+    section {
+        background-color: #F5F5F5;
+        padding: 2%;
+        border-radius: 20px;
+    }
+
+    .reference {
+        border-left: 5px solid #CCC;
+        padding-left: 20px;
+    }
+
+    .bold {
+        font-weight: 900;
+    }
+
+    .music-container {
+        text-align: center;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    /* * {
+        font-family: "TsangerJinKai03-W04";
+    } */
+
+    *::selection {
+        background-color: #FFB26F;
+        color: #543A14;
+    }
+
+    body {
+        background-color: #242424;
+        justify-content: center;
+    }
+
+    header {
+        background-color: #F0BB78;
+        width: 90%;
+        padding-left: 5%;
+        padding-right: 5%;
+        padding-top: 2%;
+        padding-bottom: 1%;
+        text-align: center;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        border-radius: 0 0 30px 30px;
+    }
+
+    header img {
+        width: 100px;
+    }
+
+    main {
+        width: 90%;
+        background-color: #333333;
+        padding: 5%;
+        margin-top: 40px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 30px;
+    }
+
+    section {
+        margin-bottom: 20px;
+    }
+
+    h1 {
+        color:#242424;
+    }
+    h2 {
+        color: #cecece;
+    }
+
+    p {
+        color: #a3a2a2;
+        line-height: 1.618;
+        font-size: 18px;
+        text-align: justify;
+    }
+
+    footer {
+        width: 100%;
+        margin-top: 20px;
+        padding: 2px;
+        text-align: center;
+        color: #FFF;
+        background-color: #333;
+    }
+
+    a {
+        font-size: 18px;
+        color: rgb(201, 131, 2);
+        outline: none;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    }
+
+    a:hover {
+        color: rgb(224, 146, 0);
+    }
+
+
+
+    .copyright {
+        font-size: 14px;
+        color: rgba(255, 235, 205, 0.521);
+    }
+
+    section {
+        background-color: #444444;
+        padding: 2%;
+        border-radius: 20px;
+    }
+
+    .reference {
+        border-left: 5px solid #CCC;
+        padding-left: 20px;
+    }
+
+    .bold {
+        font-weight: 900;
+    }
+
+    .music-container {
+        text-align: center;
+    }
+}

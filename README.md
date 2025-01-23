@@ -1,4 +1,13 @@
-# 我的网页
+# 个人主页项目说明
+
+这是一个使用原生 HTML、CSS 和 JavaScript 构建的个人主页项目。
+
+## 项目结构
+
+- `index.html`: 主页面结构
+- `css/style.css`: 样式表文件
+- `js/main.js`: JavaScript 功能实现
+- `images/`: 存放背景图片的文件夹
 
 ## 网页说明
 

@@ -1,299 +1,346 @@
-@media (prefers-color-scheme: light) {
-    *::selection {
-        background-color: #FFB26F;
-        color: #FFF0DC;
+/* 全局样式重置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* 基础样式 */
+body {
+    font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    line-height: 1.6;
+    color: #ffffff;
+    min-height: 100vh;
+    position: relative;
+    background: #000;
+}
+
+/* 加载动画样式 */
+.loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    transition: opacity 0.5s ease;
+}
+
+.loading-screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loader {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 背景图片容器样式 */
+.background-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+.background-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1;
+}
+
+.background-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: relative;
+    z-index: 0;
+}
+
+/* 主要内容容器样式 */
+.content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* 网格布局容器 */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+/* 卡片基础样式 */
+.profile-card,
+.content-card,
+.info-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1),
+                0 4px 16px rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+.profile-card:hover,
+.content-card:hover,
+.info-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2),
+                0 8px 24px rgba(255, 255, 255, 0.1);
+}
+
+/* 个人信息卡片样式 */
+.profile-card {
+    grid-column: span 1;
+    text-align: center;
+}
+
+.avatar {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 1.5rem;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+}
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 按钮组样式 */
+.button-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+.button,
+button {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 2rem;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.button:hover,
+button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+/* 信息卡片样式 */
+.info-card {
+    grid-column: span 1;
+    text-align: center;
+}
+
+/* 时钟样式 */
+.time-display {
+    margin: 1rem 0;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 0.5rem;
+}
+
+.time-display .label {
+    display: block;
+    font-size: 0.9rem;
+    opacity: 0.8;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.time-display .time {
+    font-family: 'Courier New', monospace;
+    font-size: 1.8rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* 日历卡片样式 */
+.calendar-card {
+    padding: 1.5rem;
+}
+
+.calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.25rem;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    border-radius: 0.25rem;
+    background: rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
+}
+
+.calendar-day.empty {
+    background: transparent;
+}
+
+.calendar-day.today {
+    background: rgba(255, 255, 255, 0.3);
+    font-weight: bold;
+    color: #fff;
+}
+
+.calendar-day:not(.empty):hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+#month-name {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    font-weight: bold;
+}
+
+/* 内容卡片样式 */
+.content-card {
+    grid-column: span 3;
+}
+
+.hobby-list {
+    list-style: none;
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.hobby-list li {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 1rem;
+    text-align: center;
+}
+
+/* 标题样式 */
+h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: #ffffff;
+}
+
+h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: #ffffff;
+}
+
+h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #ffffff;
+}
+
+a {
+    color: orange;
+}
+
+footer {
+    width: 100%;
+    margin-top: 20px;
+    padding: 2px;
+    text-align: center;
+    color: #FFF;
+    background-color: #33333300;
+}
+
+/* 响应式布局 */
+@media (max-width: 1024px) {
+    .grid-container {
+        grid-template-columns: repeat(2, 1fr);
     }
-
-    body {
-        background-color: #F5F5F5;
-        justify-content: center;
-    }
-
-    header {
-        background-color: #ffdc17;
-        width: 90%;
-        padding-left: 5%;
-        padding-right: 5%;
-        padding-top: 2%;
-        padding-bottom: 1%;
-        text-align: center;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-        border-radius: 0 0 30px 30px;
-    }
-
-    header img {
-        width: 100px;
-    }
-
-    main {
-        width: 90%;
-        background-color: #FFF;
-        padding: 5%;
-        margin-top: 40px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        border-radius: 30px;
-    }
-
-    section {
-        margin-bottom: 20px;
-    }
-
-    h1,
-    h2 {
-        color: #333;
-    }
-
-    p {
-        color: #666;
-        line-height: 1.618;
-        font-size: 18px;
-        text-align: justify;
-    }
-
-    footer {
-        width: 100%;
-        margin-top: 20px;
-        padding: 2px;
-        text-align: center;
-        color: #FFF;
-        background-color: #333;
-    }
-
-    a {
-        font-size: 18px;
-        color: #FFB26F;
-        outline: none;
-        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-    }
-
-    a:hover {
-        color: #DE8F5F;
-    }
-
-
-
-    .copyright {
-        font-size: 14px;
-        color: #543A14;
-    }
-
-    section {
-        background-color: #F5F5F5;
-        padding: 2%;
-        border-radius: 20px;
-    }
-
-    .reference {
-        border-left: 5px solid #CCC;
-        padding-left: 20px;
-    }
-
-    .bold {
-        font-weight: 900;
-    }
-
-    .music-container {
-        text-align: center;
+    
+    .content-card {
+        grid-column: span 2;
     }
 }
 
-@media (prefers-color-scheme: dark) {
-    /* * {
-        font-family: "TsangerJinKai03-W04";
-    } */
-
-    *::selection {
-        background-color: #FFB26F;
-        color: #543A14;
+@media (max-width: 768px) {
+    .content {
+        padding: 1rem;
     }
 
-    body {
-        background-color: #242424;
-        justify-content: center;
+    .grid-container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
     }
 
-    header {
-        background-color: #F0BB78;
-        width: 90%;
-        padding-left: 5%;
-        padding-right: 5%;
-        padding-top: 2%;
-        padding-bottom: 1%;
-        text-align: center;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-        border-radius: 0 0 30px 30px;
+    .profile-card,
+    .info-card,
+    .content-card {
+        grid-column: span 1;
+        padding: 1.5rem;
     }
 
-    header img {
-        width: 100px;
-    }
-
-    main {
-        width: 90%;
-        background-color: #333333;
-        padding: 5%;
-        margin-top: 40px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        border-radius: 30px;
-    }
-
-    section {
-        margin-bottom: 20px;
+    .button-group {
+        flex-direction: column;
     }
 
     h1 {
-        color: #242424;
+        font-size: 1.8rem;
     }
 
     h2 {
-        color: #cecece;
+        font-size: 1.3rem;
     }
 
-    p {
-        color: #a3a2a2;
-        line-height: 1.618;
-        font-size: 18px;
-        text-align: justify;
-    }
-
-    footer {
-        width: 100%;
-        margin-top: 20px;
-        padding: 2px;
-        text-align: center;
-        color: #FFF;
-        background-color: #333;
-    }
-
-    a {
-        font-size: 18px;
-        color: rgb(201, 131, 2);
-        outline: none;
-        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-    }
-
-    a:hover {
-        color: rgb(224, 146, 0);
-    }
-
-
-
-    .copyright {
-        font-size: 14px;
-        color: rgba(255, 235, 205, 0.521);
-    }
-
-    section {
-        background-color: #444444;
-        padding: 2%;
-        border-radius: 20px;
-    }
-
-    .reference {
-        border-left: 5px solid #CCC;
-        padding-left: 20px;
-    }
-
-    .bold {
-        font-weight: 900;
-    }
-
-    .music-container {
-        text-align: center;
-    }*::selection {
-        background-color: #FFB26F;
-        color: #FFF0DC;
-    }
-    
-    body {
-        background-color: #F5F5F5;
-        justify-content: center;
-    }
-    
-    header {
-        background-color: #ffdc17;
-        width: 90%;
-        padding-left: 5%;
-        padding-right: 5%;
-        padding-top: 2%;
-        padding-bottom: 1%;
-        text-align: center;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-        border-radius: 0 0 30px 30px;
-    }
-    
-    header img {
-        width: 100px;
-    }
-    
-    main {
-        width: 90%;
-        background-color: #FFF;
-        padding: 5%;
-        margin-top: 40px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        border-radius: 30px;
-    }
-    
-    section {
-        margin-bottom: 20px;
-    }
-    
-    h1,
-    h2 {
-        color: #333;
-    }
-    
-    p {
-        color: #666;
-        line-height: 1.618;
-        font-size: 18px;
-        text-align: justify;
-    }
-    
-    footer {
-        width: 100%;
-        margin-top: 20px;
-        padding: 2px;
-        text-align: center;
-        color: #FFF;
-        background-color: #333;
-    }
-    
-    a {
-        font-size: 18px;
-        color: #FFB26F;
-        outline: none;
-        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-    }
-    
-    a:hover {
-        color: #DE8F5F;
-    }
-    
-    
-    
-    .copyright {
-        font-size: 14px;
-        color: #543A14;
-    }
-    
-    section {
-        background-color: #F5F5F5;
-        padding: 2%;
-        border-radius: 20px;
-    }
-    
-    .reference {
-        border-left: 5px solid #CCC;
-        padding-left: 20px;
-    }
-    
-    .bold {
-        font-weight: 900;
-    }
-    
-    .music-container {
-        text-align: center;
+    .calendar-day {
+        font-size: 0.8rem;
     }
 }

@@ -5,64 +5,96 @@
     <link rel="icon" type="image/png" href="images/logo.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="蛋卷儿的个人主页，所有页面均是自己用代码实现的。">
-    <meta name="keywords" content="蛋卷儿, 个人主页, 前端开发, HTML, CSS">
-    <meta name="author" content="蛋卷儿">
-    <title>蛋卷儿的网站</title>
+    <title>蛋卷儿的个人主页</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/navigation-bar.css">
 </head>
 
 <body>
-    <header>
-        <img src="images/logo.png" alt="蛋卷儿的logo">
-        <h1>蛋卷儿的主页</h1>
-    </header>
-    <nav>
-        <div class="a">
-            <a href="index.html">我的简介</a>
-            <a href="html/article.html">个人博客</a>
-            <a href="html/hobby.html">兴趣爱好</a>
-            <a href="html/copyright.html">版权声明</a>
-            <div class="b"></div>
-        </div>
-    </nav>
+    <!-- 加载动画 -->
+    <div class="loading-screen">
+        <div class="loader"></div>
+        <p>加载中</p>
+    </div>
 
-    <main>
-        <section>
-            <h2>个人简介</h2>
-            <p>你好，我是蛋卷儿！我热爱学习我感兴趣的新知识，最近我在学习计算机基础、前端开发等技术。</p>
-            <p>我喜欢音乐、动漫，整体来看，我热爱技术和艺术。</p>
-            <p>由于互联网的透明性，我实在不愿意在这个公开页面上展示太多包含隐私的信息。所以，我的网页中有另外一个独立的、隐藏的个人简介页面，其中包含更多信息。如果您希望访问到这个隐藏页面，请给我发邮件，邮箱为 <a href="mailto:JyEggRoll@outlook.com">JyEggRoll@outlook.com</a>，我会根据您的请求内容，评估是否向您发送我的个人介绍页。此外，我一般会在我的简历上附上隐藏地址。</p>
-        </section>
-        <section>
-            <h2>教育背景</h2>
-            <p>目前就读于北京邮电大学计算机学院。大二分流后，选择数据科学与大数据技术深造。</p>
-        </section>
-        <section>
-            <h2>工作经验</h2>
-            <p>任校内某团队产品部部员，撰写了多篇说明文档和 PRD。</p>
-            <p>任校内某乐团某声部声部长。</p>
-            <p>暂无正式工作经验，仍在不断学习中。</p>
-        </section>
-        <section>
-            <h2>项目展示</h2>
-            <p>欢迎在 GitHub 上查看我的项目：<a href="https://github.com/Jy-EggRoll" target="_blank">Jy-EggRoll的主页</a></p>
-        </section>
-        <section>
-            <h2>技能特长</h2>
-            <p>精通电脑实用技术操作（如系统重装、串流、虚拟机安装），正在学习 HTML 和 CSS，粗略入门了 JavaScript，能够进行简单前端开发，这个网页就是成果之一。</p>
-        </section>
-        <section>
-            <h2>联系方式</h2>
-            <p>可以通过邮件与我联系：<a href="mailto:JyEggRoll@outlook.com">JyEggRoll@outlook.com</a></p>
-        </section>
+    <!-- 背景图片容器 -->
+    <div class="background-container">
+        <div class="background-overlay"></div>
+        <img src="./images/紫色天空.png" id="background" alt="背景图片">
+    </div>
+
+    <!-- 主要内容容器 -->
+    <main class="content">
+        <div class="grid-container">
+            <!-- 个人信息卡片 -->
+            <div class="profile-card">
+                <div class="avatar">
+                    <img src="./images/logo.png" alt="蛋卷儿的头像">
+                </div>
+                <h1>蛋卷儿</h1>
+                <p class="bio">欢迎来到我的个人主页</p>
+                <div class="button-group">
+                    <button onclick="changeWallpaper()">更换背景</button>
+                    <a href="https://eggroll.pages.dev" class="button" target="_blank">我的博客</a>
+                </div>
+            </div>
+
+            <!-- 时钟卡片 -->
+            <div class="info-card clock-card">
+                <h3>当前时间</h3>
+                <div id="beijing-time" class="time-display">
+                    <span class="label">北京时间</span>
+                    <span class="time">--:--:--</span>
+                </div>
+                <div id="est-time" class="time-display">
+                    <span class="label">美东时间</span>
+                    <span class="time">--:--:--</span>
+                </div>
+            </div>
+
+            <!-- 日历卡片 -->
+            <div class="info-card calendar-card">
+                <h3>日历</h3>
+                <div id="calendar">
+                    <div id="month-name"></div>
+                    <div id="calendar-grid"></div>
+                    <div class="date-display">
+                        <span id="current-date">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 关于我卡片 -->
+            <div class="content-card">
+                <h2>关于我</h2>
+                <p>你好，我是蛋卷儿！目前就读于北京邮电大学计算机学院，数据科学与大数据技术专业。</p><br>
+                <p>我热爱学习我感兴趣的新知识，最近我在学习计算机基础、前端开发等技术。</p><br>
+                <p>我喜欢音乐、动漫，整体来看，我热爱技术和艺术。</p>
+            </div>
+
+            <!-- 我的爱好卡片 -->
+            <div class="content-card">
+                <h2>我的爱好</h2>
+                <p>我的爱好广泛，包括但不限于以下几个：
+                <ul class="hobby-list">
+                    <li>研究系统</li>
+                    <li>书法</li>
+                    <li>民族音乐</li>
+                    <li>钢琴曲</li>
+                </ul>
+            </div>
+
+            <!-- 联系方式卡片 -->
+            <div class="content-card">
+                <h2>联系方式</h2>
+                <p>可以通过邮件与我联系：<a href="mailto:JyEggRoll@outlook.com">JyEggRoll@outlook.com</a></p>
+            </div>
+        </div>
     </main>
     <footer>
-        <div class="copyright">&copy; 2024 蛋卷儿 版权所有</div>
+        <div class="copyright">&copy; 2025 蛋卷儿 版权所有</div>
     </footer>
 
-    <script src="js/nav-out-folder.js"></script>
+    <script src="js/main.js"></script>
 </body>
 
 </html>

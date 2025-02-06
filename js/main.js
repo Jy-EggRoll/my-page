@@ -19,7 +19,7 @@ function updateTime() {
         });
     
     // 更新美东时间
-    const estTime = new Date(now.getTime() + (now.getTimezoneOffset() + 240) * 60000);
+    const estTime = new Date(now.getTime() + (now.getTimezoneOffset() - 300) * 60000);
     document.querySelector('#est-time .time').textContent = 
         estTime.toLocaleTimeString('en-US', { 
             hour12: true,

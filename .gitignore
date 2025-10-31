@@ -63,5 +63,3 @@ config_gmunitx.json
 # 旧的静态构建目录
 static_build/
 static_build1/
-
-index.html

@@ -50,9 +50,9 @@ export const STRINGS: Record<Locale, SiteStrings> = {
     brand: 'EggRoll',
     pageTitle: 'EggRoll · Personal site',
     pageDescription:
-      'Engineering aesthetics in technical detail — personal site and open-source index.',
+      'Engineering aesthetics woven into technical detail — personal site and open-source index.',
     notice:
-      'Prototype: four themes and two languages switch live. Content and final copy are still being iterated on.',
+      'Prototype: four themes and two languages can be switched instantly. Content and final copy are still in progress.',
     linkGithub: 'GitHub',
     linkBlog: 'Blog',
 

@@ -183,7 +183,7 @@ const ZH: ResumeContent = {
 
 const EN: ResumeContent = {
   headline: [
-    'Engineering aesthetics, expressed in technical detail',
+    'Bringing engineering aesthetics into every technical detail',
     'Solving efficiency pain points through technical detail',
   ],
   summary: [
@@ -217,7 +217,7 @@ const EN: ResumeContent = {
           subtitle: 'Cloud Architect Intern',
           meta: 'Jul 2026 – Sep 2026',
           detail:
-            'Supported customer cloud migrations and hard-to-diagnose faults, producing reusable troubleshooting docs and AI-assisted workflows.',
+            'Supported customer cloud migrations and complex fault diagnosis, producing reusable troubleshooting docs and AI-assisted workflows.',
         },
         {
           id: 'beiyouren',

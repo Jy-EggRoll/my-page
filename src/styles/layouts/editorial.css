@@ -8,8 +8,9 @@
 
 [data-layout='editorial'] .section-shell {
   display: grid;
-  /* 书眉栏要能容下最长的标签（「GitHub 统计」「志愿服务」），否则会折成两行 */
-  grid-template-columns: 6.5rem minmax(0, 1fr);
+  /* 书眉栏宽度有限：实测 16px 字号下 "Open source" 文本宽约 111px，与 112px 栏宽只差 1px
+     就会折行。故英文标签保持简短，栏宽取 8rem */
+  grid-template-columns: 8rem minmax(0, 1fr);
   gap: 2rem;
   margin-top: 0;
   padding: 1.75rem 0;
@@ -84,7 +85,11 @@
   right: 0;
 }
 
-/* 核心章节（经历/项目）的顶线加深，配合更大的标签与标题形成强弱对比 */
+/* 核心章节（经历/项目）的顶线加深，配合更实的前景色形成强弱对比。
+   刻意不放大标签字号：书眉栏窄，放大后长标签会折行（实测 "Open source" 会折成两行）。 */
 [data-layout='editorial'] .section-shell[data-emphasis='major'] {
   border-top-color: var(--color-fg-subtle);
+}
+[data-layout='editorial'] .section-shell[data-emphasis='major'] .section-label {
+  font-size: 0.8125rem;
 }

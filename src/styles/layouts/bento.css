@@ -23,7 +23,6 @@
   border-radius: var(--radius-card);
   background: var(--color-surface);
   padding: 1rem;
-  backdrop-filter: blur(var(--blur-panel));
   box-shadow: var(--elevation-card);
 }
 [data-layout='bento'] .section-masthead {

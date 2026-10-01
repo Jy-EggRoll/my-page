@@ -180,7 +180,6 @@
   border-radius: var(--radius-card);
   background: var(--color-surface);
   padding: 1rem;
-  backdrop-filter: blur(var(--blur-panel));
   box-shadow: var(--elevation-card);
 }
 @media (min-width: 40rem) {
@@ -257,9 +256,13 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
   background: var(--color-surface-raised);
-  /* 亚克力/玻璃主题的模糊令牌（material 为 0，等于没有这一层）；
-     不写死模糊半径，主题改令牌即可 */
-  backdrop-filter: blur(var(--blur-panel));
+  /* 亚克力/玻璃主题的毛玻璃令牌（material 为 none，等于没有这一层）；
+     不写死模糊半径，主题改令牌即可。
+     毛玻璃只留在这里：控件条面积小、又确实是浮在页面之上的一层控件。
+     内容面板一律不申请毛玻璃 —— 它们底下只有固定的柔和渐变背景，模糊与不模糊
+     像素上无法区分，但每个面板都会多出一个合成层并逐帧重算模糊，
+     便当格/终端两套版式下这曾经覆盖 79% / 63% 的视口面积。 */
+  backdrop-filter: var(--panel-backdrop);
   padding: 0.1875rem;
 }
 /* 桌面端控件条常开、摘要隐藏；若在窄屏收起过再回到宽屏，摘要会显出来兜底 */

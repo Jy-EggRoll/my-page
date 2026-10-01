@@ -66,6 +66,23 @@
 }
 
 /*
+ * 面板毛玻璃（backdrop-filter）。组件只能写 `backdrop-filter: var(--panel-backdrop)`。
+ *
+ * 为什么不直接写 blur(var(--blur-panel))：material 的模糊半径是 0，而
+ * `backdrop-filter: blur(0px)` 并不是「没有这一层」—— Chromium 仍会把它当成
+ * backdrop-filter 元素，建合成层并逐帧读回背景，等于白付一份 GPU 合成与显存的钱。
+ * 用一个允许取 none 的令牌来表达「这个主题到底要不要毛玻璃」，不要毛玻璃的主题才真的省得掉。
+ *
+ * 另一条纪律：**大面积内容面板不要申请毛玻璃**。本站所有面板底下只有那层固定的柔和渐变
+ * 背景（--backdrop-layer），模糊一个低频渐变与不模糊在像素上无法区分（实测差值 0），
+ * 但每个这样的面板都会变成独立合成层、逐帧重算模糊。毛玻璃只留给面积小、真正是「浮在
+ * 内容之上」的控件（目前只有页头控件条）。详见 src/styles/layout.css 的 .appearance-bar。
+ */
+:root {
+  --panel-backdrop: none;
+}
+
+/*
  * 首屏氛围层的光晕强度（百分比）。
  * 放在令牌层而不是写死在 layout.css，是因为浅底与近黑底对同一层淡彩的感知差很多，
  * 各主题需要能各自调；layout.css 只负责「用哪两个强调色、铺在什么位置」。

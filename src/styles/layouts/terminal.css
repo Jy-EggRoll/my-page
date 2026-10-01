@@ -62,7 +62,7 @@
   border-radius: var(--radius-control);
   background: var(--color-surface);
   padding: 1rem;
-  backdrop-filter: blur(var(--blur-panel));
+  backdrop-filter: none;
 }
 [data-layout='terminal'] .section-masthead {
   justify-content: space-between;

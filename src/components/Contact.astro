@@ -32,7 +32,7 @@ const t = stringsFor(locale);
             href={contact.href}
             target={contact.href.startsWith('http') ? '_blank' : undefined}
             rel={contact.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-            class="flex items-center justify-between gap-3 rounded-card border border-border bg-surface px-4 py-3 backdrop-blur-panel transition-shadow ease-standard [box-shadow:var(--elevation-card)] hover:[box-shadow:var(--elevation-raised)]"
+            class="flex items-center justify-between gap-3 rounded-card border border-border bg-surface px-4 py-3 transition-shadow ease-standard [box-shadow:var(--elevation-card)] hover:[box-shadow:var(--elevation-raised)]"
           >
             <span class="text-sm font-medium">{t.contactLabels[contact.id]}</span>
             <span class="contact-handle font-mono text-xs text-fg-subtle">{contact.handle}</span>

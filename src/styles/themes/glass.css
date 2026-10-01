@@ -25,6 +25,7 @@
   --radius-chip: 9999px;
 
   --blur-panel: 28px;
+  --panel-backdrop: blur(var(--blur-panel));
   --backdrop-layer:
     radial-gradient(55rem 38rem at 8% -12%, oklch(86% 0.09 210 / 0.7), transparent 62%),
     radial-gradient(48rem 34rem at 95% 4%, oklch(88% 0.08 185 / 0.6), transparent 60%),

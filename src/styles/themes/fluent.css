@@ -25,6 +25,7 @@
   --radius-chip: 9999px;
 
   --blur-panel: 20px;
+  --panel-backdrop: blur(var(--blur-panel));
   --elevation-card: 0 1px 2px oklch(22% 0.014 250 / 0.08), 0 4px 12px oklch(22% 0.014 250 / 0.09);
   --elevation-raised: 0 2px 6px oklch(22% 0.014 250 / 0.1), 0 16px 36px oklch(22% 0.014 250 / 0.14);
 

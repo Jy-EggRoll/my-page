@@ -1,0 +1,20 @@
+---
+interface Props {
+  tags: readonly string[];
+}
+
+const { tags } = Astro.props;
+---
+
+<span class="flex flex-wrap gap-2">
+  {
+    tags.map((tag) => (
+      <span
+        data-chip
+        class="rounded-chip bg-accent-soft px-3 py-1 text-xs font-medium text-accent"
+      >
+        {tag}
+      </span>
+    ))
+  }
+</span>

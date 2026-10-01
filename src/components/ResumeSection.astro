@@ -1,0 +1,108 @@
+---
+import type { ResumeSection as Section } from '../data/resume';
+import TagChips from './TagChips.astro';
+
+interface Props {
+  section: Section;
+}
+
+const { section } = Astro.props;
+const LEVELS = [1, 2, 3, 4, 5];
+---
+
+<!-- 板块完全由数据驱动：加板块、调顺序、换布局都只改 src/data/resume.ts，
+     不需要新建组件。data-section-id / data-entry 供回归脚本按板块核对条目数。 -->
+<section data-section-id={section.id} class="mt-12">
+  <h2 class="text-sm font-semibold tracking-heading text-fg-subtle">{section.label}</h2>
+
+  {
+    section.layout === 'timeline' && (
+      <ol class="mt-5 space-y-6">
+        {section.entries.map((entry) => (
+          <li data-entry class="grid gap-1 sm:grid-cols-[9rem_1fr] sm:gap-5">
+            <p class="font-mono text-xs leading-body text-fg-subtle">{entry.meta}</p>
+            <div class="sm:border-l sm:border-border sm:pl-5">
+              <h3 class="text-sm font-semibold">{entry.title}</h3>
+              {entry.subtitle && <p class="mt-0.5 text-xs text-fg-subtle">{entry.subtitle}</p>}
+              {entry.detail && <p class="mt-1 leading-body text-fg-muted">{entry.detail}</p>}
+            </div>
+          </li>
+        ))}
+      </ol>
+    )
+  }
+
+  {
+    section.layout === 'grid' && (
+      <ul class="mt-5 grid gap-4 sm:grid-cols-2">
+        {section.entries.map((entry) => (
+          <li
+            data-entry
+            class="rounded-card border border-border bg-surface p-4 backdrop-blur-panel [box-shadow:var(--elevation-card)]"
+          >
+            <h3 class="text-sm font-semibold">
+              {entry.href ? (
+                <a
+                  href={entry.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="transition-colors ease-standard hover:text-accent"
+                >
+                  {entry.title}
+                </a>
+              ) : (
+                entry.title
+              )}
+            </h3>
+            {entry.subtitle && <p class="mt-0.5 text-xs text-fg-subtle">{entry.subtitle}</p>}
+            {entry.meta && <p class="mt-1 font-mono text-xs text-fg-subtle">{entry.meta}</p>}
+            {entry.detail && <p class="mt-2 text-sm leading-body text-fg-muted">{entry.detail}</p>}
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  {
+    section.layout === 'meter' && (
+      <ul class="mt-5 space-y-4">
+        {section.entries.map((entry) => (
+          <li data-entry>
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span class="text-sm font-medium">{entry.title}</span>
+              {entry.subtitle && <span class="text-xs text-fg-subtle">{entry.subtitle}</span>}
+              {entry.level !== undefined && (
+                <span class="flex items-center gap-1" role="img" aria-label={`${entry.level}/5`}>
+                  {LEVELS.map((step) => (
+                    <span
+                      aria-hidden="true"
+                      class={`h-1.5 w-1.5 rounded-pill ${step <= (entry.level ?? 0) ? 'bg-accent' : 'bg-border'}`}
+                    />
+                  ))}
+                </span>
+              )}
+            </div>
+            {entry.tags && (
+              <div class="mt-2">
+                <TagChips tags={entry.tags} />
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  {
+    section.layout === 'tags' && (
+      <ul class="mt-5 space-y-3">
+        {section.entries.map((entry) => (
+          <li data-entry class="flex flex-wrap items-center gap-3">
+            <span class="text-sm font-medium">{entry.title}</span>
+            {entry.tags && <TagChips tags={entry.tags} />}
+          </li>
+        ))}
+      </ul>
+    )
+  }
+</section>

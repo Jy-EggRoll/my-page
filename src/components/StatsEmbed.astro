@@ -18,8 +18,11 @@ const base = withBase(`/${STATS_PUBLIC_DIR}`);
   <div class="mt-4 grid gap-5 sm:grid-cols-2">
     {
       STATS_CARDS.map((card) => (
-        <figure class="rounded-card border border-border bg-surface p-4 backdrop-blur-panel [box-shadow:var(--elevation-card)]">
-          <figcaption class="mb-3 text-xs font-medium text-fg-subtle">
+        // 刻意不给 figure 加边框/底色/内边距：SVG 自己就画了一个带描边的圆角卡片，
+        // 再套一层框会变成双重边框、且两者外边距不一致，看起来就是「不齐」。
+        // 这里只负责标题与图片，卡片本体交给 SVG。
+        <figure>
+          <figcaption class="mb-2 text-xs font-medium text-fg-subtle">
             {card.title[locale]}
           </figcaption>
           {/* 必须以 <img> 引用、不能内联：SVG 自带的 <style> 用 #background/th/td

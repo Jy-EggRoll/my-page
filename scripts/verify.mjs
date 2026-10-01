@@ -124,9 +124,11 @@ async function metrics(page) {
 
     const rootStyle = getComputedStyle(document.documentElement)
     const bodyStyle = getComputedStyle(document.body)
-    const card = document.querySelector('article')
+    // 用稳定的数据钩子定位卡片与标签，而不是 <article>/<section span> ——
+    // 那些标签会随布局调整而变，钩子不会。
+    const card = document.querySelector('[data-section-id="projects"] [data-entry]')
     const cardStyle = card ? getComputedStyle(card) : null
-    const chip = document.querySelector('section span')
+    const chip = document.querySelector('[data-chip]')
     const chipStyle = chip ? getComputedStyle(chip) : null
     const heading = document.querySelector('h1')
     const headingStyle = heading ? getComputedStyle(heading) : null
@@ -222,7 +224,7 @@ async function appearanceSuite(page, report) {
 
   await report.check('页面可打开，两个外观维度的控件都在', async () => {
     await page.goto(TARGET, { waitUntil: 'load' })
-    await page.waitForSelector('article', { timeout: 15000 })
+    await page.waitForSelector('[data-section-id="projects"] [data-entry]', { timeout: 15000 })
     for (const label of [...THEME_OPTIONS, ...SCHEME_OPTIONS].map((option) => option.label)) {
       const count = await page.getByRole('button', { name: label }).count()
       if (count !== 1) throw new Error(`按钮「${label}」应恰好 1 个，实际 ${count} 个`)
@@ -296,7 +298,7 @@ async function appearanceSuite(page, report) {
     const last = COMBOS.at(-1)
     await selectCombo(page, last)
     await page.reload({ waitUntil: 'load' })
-    await page.waitForSelector('article', { timeout: 15000 })
+    await page.waitForSelector('[data-section-id="projects"] [data-entry]', { timeout: 15000 })
     const after = await settledMetrics(page)
     if (after.theme !== last.themeId || after.scheme !== last.schemeId) {
       throw new Error(`刷新后期望 ${last.themeId}/${last.schemeId}，实际 ${after.theme}/${after.scheme}`)
@@ -391,44 +393,55 @@ async function i18nSuite(page, report) {
 async function contentSuite(page, report) {
   report.section('内容套件')
 
-  const SECTION_LABELS = {
-    zh: ['关于我', '技能与经历', '开源项目', 'GitHub 统计', '联系方式'],
-    en: ['About', 'Skills & experience', 'Open source', 'GitHub stats', 'Contact'],
-  }
+  /** 期望的板块及其顺序（顺序错了同样算问题）。 */
+  const EXPECTED_SECTIONS = [
+    'summary',
+    'education',
+    'experience',
+    'projects',
+    'skills',
+    'languages',
+    'awards',
+    'certifications',
+    'interests',
+    'volunteer',
+  ]
 
+  /** 各板块的条目数直接从 DOM 读，不写死具体数字。 */
   const readContent = async () =>
-    page.evaluate(() => ({
-      headings: [...document.querySelectorAll('h2')].map((el) => (el.textContent ?? '').trim()),
-      timelineCount: document.querySelectorAll('section ol > li').length,
-      contactCount: document.querySelectorAll('section ul > li').length,
-      projectCount: document.querySelectorAll('article').length,
-      statsCount: document.querySelectorAll('section figure').length,
-    }))
+    page.evaluate(() =>
+      Object.fromEntries(
+        [...document.querySelectorAll('[data-section-id]')].map((section) => [
+          section.dataset.sectionId,
+          {
+            entries: section.querySelectorAll('[data-entry]').length,
+            heading: (section.querySelector('h2')?.textContent ?? '').trim(),
+          },
+        ]),
+      ),
+    )
 
   const measured = {}
 
   for (const locale of ['zh', 'en']) {
-    await report.check(`${locale === 'zh' ? '中文' : '英文'}页板块齐全且条目非空`, async () => {
+    await report.check(`${locale === 'zh' ? '中文' : '英文'}页板块齐全、顺序正确、条目非空`, async () => {
       await page.goto(locale === 'zh' ? TARGET : EN_URL, { waitUntil: 'load' })
-      await page.waitForSelector('h1', { timeout: 15000 })
+      await page.waitForSelector('[data-section-id]', { timeout: 15000 })
       const content = await readContent()
       measured[locale] = content
-      report.note(`板块：${content.headings.join(' / ')}`)
-      report.note(
-        `时间线 ${content.timelineCount} 条 ｜ 联系 ${content.contactCount} 条 ｜ 项目 ${content.projectCount} 条 ｜ 统计卡 ${content.statsCount} 张`,
-      )
-      const missing = SECTION_LABELS[locale].filter((label) => !content.headings.includes(label))
-      if (missing.length > 0) throw new Error(`缺少板块标题：${missing.join(', ')}`)
-      if (
-        content.timelineCount < 3 ||
-        content.contactCount < 3 ||
-        content.projectCount < 3 ||
-        content.statsCount < 2
-      ) {
-        throw new Error(
-          `条目数不足：时间线 ${content.timelineCount}、联系 ${content.contactCount}、项目 ${content.projectCount}、统计卡 ${content.statsCount}`,
-        )
+      const ids = Object.keys(content)
+      report.note(`板块顺序：${ids.join(' → ')}`)
+      const missing = EXPECTED_SECTIONS.filter((id) => !ids.includes(id))
+      if (missing.length > 0) throw new Error(`缺少板块：${missing.join(', ')}`)
+      const wrongOrder = EXPECTED_SECTIONS.filter((id, index) => ids[index] !== id)
+      if (wrongOrder.length > 0) {
+        throw new Error(`板块顺序与预期不符，首个不对的是「${wrongOrder[0]}」`)
       }
+      const empty = EXPECTED_SECTIONS.filter((id) => id !== 'summary' && content[id].entries < 1)
+      if (empty.length > 0) throw new Error(`这些板块没有条目：${empty.join(', ')}`)
+      report.note(
+        EXPECTED_SECTIONS.map((id) => `${content[id].heading}(${content[id].entries})`).join('  '),
+      )
     })
   }
 
@@ -510,15 +523,13 @@ async function contentSuite(page, report) {
   await report.check('两种语言的条目数与 DOM 结构一致（一套组件服务两种语言）', async () => {
     const zh = measured.zh
     const en = measured.en
-    if (
-      zh.timelineCount !== en.timelineCount ||
-      zh.contactCount !== en.contactCount ||
-      zh.projectCount !== en.projectCount
-    ) {
+    const mismatched = EXPECTED_SECTIONS.filter((id) => zh[id]?.entries !== en[id]?.entries)
+    if (mismatched.length > 0) {
       throw new Error(
-        `条目数不一致：时间线 ${zh.timelineCount}/${en.timelineCount}、联系 ${zh.contactCount}/${en.contactCount}、项目 ${zh.projectCount}/${en.projectCount}`,
+        mismatched.map((id) => `${id}: zh ${zh[id]?.entries} vs en ${en[id]?.entries}`).join('；'),
       )
     }
+    report.note(EXPECTED_SECTIONS.map((id) => `${id}=${zh[id]?.entries}`).join('  '))
     await page.goto(TARGET, { waitUntil: 'load' })
     const zhFingerprint = await structureFingerprint(page)
     await page.goto(EN_URL, { waitUntil: 'load' })

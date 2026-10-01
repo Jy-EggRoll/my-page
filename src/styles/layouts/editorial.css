@@ -79,10 +79,26 @@
   padding: 0.625rem 0;
 }
 
-/* 首屏锚点：字标放在标题右上，完整可见（此前 top 为负会被裁掉字头，且压到提示条上） */
+/* 首屏字标：从「压在标题右上角的大水印」改成安放在空书眉行的小字标。
+   原实现（top:0.25rem 的 6.5rem 渐变水印）与两行标题共用同一片区域，字形被标题切掉一截，
+   看起来像渲染故障而不是设计。编辑式的书眉行本就是空的（路径标签只在终端版式显示），
+   把字标放进去既不与标题争地，也补上了这一档缺失的页眉层次。
+   字号与行高之和必须小于书眉行的 1.5rem 下边距，否则又会压到标题。 */
 [data-layout='editorial'] .hero-mark {
-  top: 0.25rem;
+  top: 0;
   right: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  /* 字距会在末尾补一格空白，回退掉才能真正贴齐右边界 */
+  margin-right: -0.24em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  background-image: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  color: var(--color-fg-subtle);
+  opacity: 1;
 }
 
 /* 核心章节（经历/项目）的顶线加深，配合更实的前景色形成强弱对比。

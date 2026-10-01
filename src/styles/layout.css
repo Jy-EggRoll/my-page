@@ -290,6 +290,37 @@
   position: relative;
   overflow: hidden;
 }
+/*
+ * 首屏氛围层：两枚柔和光晕垫在内容之下，让首屏比正文更有空气感。
+ * 刻意用 ::before 伪元素而不是新增节点 —— 回归脚本的 DOM 指纹断言
+ * （scripts/verify.mjs:316-327）要求所有外观组合的结构完全一致，
+ * 伪元素不进 DOM 树，天然满足。
+ * 颜色全部由主题强调色派生，因此 4 套主题 × 明暗都会自动跟着变。
+ */
+.section-shell.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(
+      24% 42% at 32% 46%,
+      color-mix(in oklab, var(--color-accent) var(--hero-glow-primary), transparent),
+      transparent 100%
+    ),
+    radial-gradient(
+      20% 34% at 72% 36%,
+      color-mix(in oklab, var(--color-accent-2) var(--hero-glow-secondary), transparent),
+      transparent 100%
+    );
+  /*
+   * 两枚光斑必须完整落在 hero 矩形之内 —— 半径与中心位置都按最窄的一档（窄屏 312px 宽）
+   * 留了余量，这样渐变在碰到边界之前就已经是 transparent，四条边不会出现硬切口。
+   * 早先用「铺满整块 + mask 收边」的写法，左边缘仍会漏出约 8% 的不透明度，
+   * 浅色主题下表现为一条看得见的竖直边界。与其叠加遮罩，不如让光斑本身落在里面。
+   */
+}
 .section-shell.hero .section-body {
   position: relative;
   z-index: 1;

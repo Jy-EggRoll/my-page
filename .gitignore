@@ -22,5 +22,8 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 
-# 外观回归现场产物（本机验证，见 scripts/verify-appearance.mjs）
+# 本机回归现场产物（见 scripts/verify.mjs）
 .verify/
+
+# 构建期从 my-github-stats 拉取的统计卡片（快照版本已提交在 src/assets/external/）
+public/stats/

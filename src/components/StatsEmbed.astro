@@ -1,0 +1,58 @@
+---
+import type { Locale } from '../config/i18n';
+import { STATS_CARDS, STATS_DARK_VARIANT_FRAGMENT, STATS_PUBLIC_DIR } from '../config/stats';
+import { stringsFor } from '../data/strings';
+import { withBase } from '../utils/url';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = stringsFor(locale);
+const base = withBase(`/${STATS_PUBLIC_DIR}`);
+---
+
+<section class="mt-12">
+  <h2 class="text-sm font-semibold tracking-heading text-fg-subtle">{t.statsLabel}</h2>
+  <div class="mt-4 grid gap-5 sm:grid-cols-2">
+    {
+      STATS_CARDS.map((card) => (
+        <figure class="rounded-card border border-border bg-surface p-4 backdrop-blur-panel [box-shadow:var(--elevation-card)]">
+          <figcaption class="mb-3 text-xs font-medium text-fg-subtle">
+            {card.title[locale]}
+          </figcaption>
+          {/* 必须以 <img> 引用、不能内联：SVG 自带的 <style> 用 #background/th/td
+              这类全局选择器写颜色，内联会污染整站样式。深浅两版是同一个文件，
+              差别只在 URL 片段是否触发 SVG 内部的 :target 规则。 */}
+          <img
+            class="stats-light"
+            src={`${base}/${card.file}`}
+            alt={card.alt[locale]}
+            width="360"
+            height="210"
+            loading="lazy"
+          />
+          <img
+            class="stats-dark"
+            src={`${base}/${card.file}#${STATS_DARK_VARIANT_FRAGMENT}`}
+            alt={card.alt[locale]}
+            width="360"
+            height="210"
+            loading="lazy"
+          />
+        </figure>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  /* 显隐取值集中在 theme.css 的明暗层里，组件本身不关心明暗叫什么名字 */
+  .stats-light {
+    display: var(--stats-light-display);
+  }
+  .stats-dark {
+    display: var(--stats-dark-display);
+  }
+</style>

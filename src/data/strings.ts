@@ -43,6 +43,8 @@ export interface SiteStrings {
   projectsLabel: string;
   projects: readonly ProjectEntry[];
 
+  statsLabel: string;
+
   contactsLabel: string;
   contactLabels: Record<ContactId, string>;
 
@@ -132,6 +134,8 @@ export const STRINGS: Record<Locale, SiteStrings> = {
       qq: 'QQ',
       bilibili: '哔哩哔哩',
     },
+
+    statsLabel: 'GitHub 统计',
 
     footer: '由 Astro 与 Tailwind CSS 构建',
     langSwitcherLabel: '切换语言',
@@ -223,6 +227,8 @@ export const STRINGS: Record<Locale, SiteStrings> = {
       qq: 'QQ',
       bilibili: 'Bilibili',
     },
+
+    statsLabel: 'GitHub stats',
 
     footer: 'Built with Astro and Tailwind CSS',
     langSwitcherLabel: 'Switch language',

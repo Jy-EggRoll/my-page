@@ -69,9 +69,15 @@
   :root {
     color-scheme: light;
     background-color: var(--color-bg);
+    /* 统计卡片的两版图片靠显隐切换（深色变体由 URL 片段触发，见 config/stats.ts）。
+       明暗的具体取值集中在这里，组件只消费令牌、不关心明暗叫什么名字。 */
+    --stats-light-display: block;
+    --stats-dark-display: none;
   }
   /* 声明 color-scheme 让表单控件与滚动条跟随明暗，而不是被浏览器自动反色 */
   :root[data-scheme='dark'] {
     color-scheme: dark;
+    --stats-light-display: none;
+    --stats-dark-display: block;
   }
 }

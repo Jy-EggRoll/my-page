@@ -22,6 +22,11 @@ import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
+/** 统计卡片的产物目录，取自站点配置（与页面用的是同一个来源）。 */
+const { STATS_PUBLIC_DIR } = await import(
+  pathToFileURL(join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'config', 'stats.ts')).href
+)
+
 /** 仓库根：本脚本位于 <repo>/scripts/ 下。 */
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -387,8 +392,8 @@ async function contentSuite(page, report) {
   report.section('内容套件')
 
   const SECTION_LABELS = {
-    zh: ['关于我', '技能与经历', '开源项目', '联系方式'],
-    en: ['About', 'Skills & experience', 'Open source', 'Contact'],
+    zh: ['关于我', '技能与经历', '开源项目', 'GitHub 统计', '联系方式'],
+    en: ['About', 'Skills & experience', 'Open source', 'GitHub stats', 'Contact'],
   }
 
   const readContent = async () =>
@@ -397,6 +402,7 @@ async function contentSuite(page, report) {
       timelineCount: document.querySelectorAll('section ol > li').length,
       contactCount: document.querySelectorAll('section ul > li').length,
       projectCount: document.querySelectorAll('article').length,
+      statsCount: document.querySelectorAll('section figure').length,
     }))
 
   const measured = {}
@@ -409,17 +415,97 @@ async function contentSuite(page, report) {
       measured[locale] = content
       report.note(`板块：${content.headings.join(' / ')}`)
       report.note(
-        `时间线 ${content.timelineCount} 条 ｜ 联系 ${content.contactCount} 条 ｜ 项目 ${content.projectCount} 条`,
+        `时间线 ${content.timelineCount} 条 ｜ 联系 ${content.contactCount} 条 ｜ 项目 ${content.projectCount} 条 ｜ 统计卡 ${content.statsCount} 张`,
       )
       const missing = SECTION_LABELS[locale].filter((label) => !content.headings.includes(label))
       if (missing.length > 0) throw new Error(`缺少板块标题：${missing.join(', ')}`)
-      if (content.timelineCount < 3 || content.contactCount < 3 || content.projectCount < 3) {
+      if (
+        content.timelineCount < 3 ||
+        content.contactCount < 3 ||
+        content.projectCount < 3 ||
+        content.statsCount < 2
+      ) {
         throw new Error(
-          `条目数不足：时间线 ${content.timelineCount}、联系 ${content.contactCount}、项目 ${content.projectCount}`,
+          `条目数不足：时间线 ${content.timelineCount}、联系 ${content.contactCount}、项目 ${content.projectCount}、统计卡 ${content.statsCount}`,
         )
       }
     })
   }
+
+  await report.check('统计卡片的图片真的加载出来了（不是破图）', async () => {
+    await page.goto(TARGET, { waitUntil: 'load' })
+    // 只等元素挂上，不要等「可见」：每张卡片有两个 img（浅/深变体），
+    // 其中一个必然被 display:none 隐藏，而 waitForSelector 默认要可见，
+    // 又只会盯着第一个匹配，于是会一直等那个隐藏的变体。
+    await page.waitForSelector('section figure img', { state: 'attached', timeout: 15000 })
+    // 等可见的那一版加载完：深色版被 display:none 隐藏，浏览器不会加载它，
+    // 所以只断言「当前显示的那一版」。
+    await page.waitForFunction(
+      () => {
+        const visible = [...document.querySelectorAll('section figure img')].filter(
+          (img) => getComputedStyle(img).display !== 'none',
+        )
+        return visible.length > 0 && visible.every((img) => img.complete)
+      },
+      undefined,
+      { timeout: 15000 },
+    )
+    const broken = await page.evaluate(() =>
+      [...document.querySelectorAll('section figure img')]
+        .filter((img) => getComputedStyle(img).display !== 'none')
+        .filter((img) => img.naturalWidth === 0)
+        .map((img) => img.currentSrc || img.src),
+    )
+    if (broken.length > 0) throw new Error(`这些统计卡片图片加载失败：${broken.join(', ')}`)
+    const loaded = await page.evaluate(
+      () =>
+        [...document.querySelectorAll('section figure img')].filter(
+          (img) => getComputedStyle(img).display !== 'none',
+        ).length,
+    )
+    // 卡片 SVG 内部各行带入场动画（tr 从 translateX(-200%) 滑入，耗时 2s 且有递减延迟）。
+    // 动画发生在图片文档内部、从页面侧观察不到，所以只能按已知时长等待，
+    // 否则回看页里留下的会是「滑到一半」的误导性截图。
+    await page.waitForTimeout(2600)
+    report.note(`当前明暗下可见的统计卡片图片 ${loaded} 张，均加载成功（已等入场动画结束）`)
+  })
+
+  await report.check('统计卡片按明暗切换显示版本，且深色配色规则确实在产物里', async () => {
+    await page.goto(TARGET, { waitUntil: 'load' })
+
+    const readVisible = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll('section figure img')]
+          .filter((img) => getComputedStyle(img).display !== 'none')
+          .map((img) => (img.classList.contains('stats-dark') ? 'dark' : 'light')),
+      )
+
+    await page.getByRole('button', { name: '浅色' }).click()
+    await waitForTransitionsToSettle(page)
+    const inLight = await readVisible()
+    await page.getByRole('button', { name: '深色' }).click()
+    await waitForTransitionsToSettle(page)
+    const inDark = await readVisible()
+    report.note(`浅色方案显示：${inLight.join(',') || '(无)'} ｜ 深色方案显示：${inDark.join(',') || '(无)'}`)
+
+    if (inLight.length === 0 || inLight.some((variant) => variant !== 'light')) {
+      throw new Error(`浅色方案下应只显示浅色版，实际 ${inLight.join(',') || '(无)'}`)
+    }
+    if (inDark.length === 0 || inDark.some((variant) => variant !== 'dark')) {
+      throw new Error(`深色方案下应只显示深色版，实际 ${inDark.join(',') || '(无)'}`)
+    }
+
+    // 深色变体是同一份文件靠 SVG 内部的 :target 规则切色，
+    // 所以产物里必须真的存在这条规则，否则片段带了也不会变深。
+    // （不能用 canvas 取像素验证：该 SVG 含 foreignObject，会被浏览器标记为
+    //   「已污染」而禁止读回像素。）
+    const response = await fetch(`${TARGET}${STATS_PUBLIC_DIR}/overview.svg`)
+    const svg = await response.text()
+    if (!svg.includes(':target')) {
+      throw new Error('产物里的统计卡片 SVG 不含 :target 规则，深色变体不会生效')
+    }
+    report.note(`产物 SVG 含 :target 规则，长度 ${svg.length}`)
+  })
 
   await report.check('两种语言的条目数与 DOM 结构一致（一套组件服务两种语言）', async () => {
     const zh = measured.zh

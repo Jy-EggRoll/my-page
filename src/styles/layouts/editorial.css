@@ -37,7 +37,8 @@
   margin-bottom: 1.5rem;
 }
 [data-layout='editorial'] .hero-headline {
-  font-size: clamp(1.875rem, 5vw, 3.25rem);
+  /* 下限调到 1.375rem：390px 宽时 12 个汉字仍能整行放下，不会折出孤立单字 */
+  font-size: clamp(1.375rem, 5vw, 3.25rem);
 }
 [data-layout='editorial'] .hero-line + .hero-line {
   padding-left: 2.5rem;

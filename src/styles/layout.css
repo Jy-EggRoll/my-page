@@ -59,12 +59,14 @@
 }
 
 /* ---------- 首屏 ---------- */
-/* 字号与显示行高属于版式；字距归主题（--tracking-heading），主题换了它必须跟着变 */
+/* 字号与显示行高属于版式；字距归主题（--tracking-heading），主题换了它必须跟着变。
+   text-wrap: pretty 让浏览器主动避免「末行只剩一两个字」的怪折行（窄屏尤其明显）。 */
 .hero-headline {
-  font-size: clamp(2rem, 6vw, 3.5rem);
+  font-size: clamp(1.5rem, 6vw, 3.5rem);
   font-weight: 700;
   letter-spacing: var(--tracking-heading);
   line-height: 1.06;
+  text-wrap: pretty;
 }
 .hero-line {
   display: block;

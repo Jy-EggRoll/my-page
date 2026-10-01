@@ -591,39 +591,50 @@ async function layoutSuite(page, report) {
       }
     })
 
-  for (const layout of LAYOUTS) {
-    await report.check(
-      `版式「${layout.label}」：无横向溢出、大标题无孤立单字、板块结构完整`,
-      async () => {
-        await page.goto(TARGET, { waitUntil: 'load' })
-        await page.evaluate(
-          (id) => document.documentElement.setAttribute('data-layout', id),
-          layout.id,
-        )
-        await page.waitForTimeout(600)
-        const info = await probe()
-        measured[layout.id] = info
-        report.note(
-          `横向溢出 ${info.overflow}px ｜ h1 每行字数 [${info.lines.join(', ')}] ｜ 板块 ${info.sections.length} 个 ｜ 侧栏 ${info.railVisible ? '显示' : '隐藏'}`,
-        )
-        if (info.overflow > 0) throw new Error(`出现横向溢出 ${info.overflow}px`)
-        if (info.sections.length < 11) {
-          throw new Error(`板块数仅 ${info.sections.length} 个，结构钩子可能有缺失`)
-        }
-        const last = info.lines.at(-1)
-        if (info.lines.length > 1 && last !== undefined && last <= 2) {
-          throw new Error(`大标题末行只剩 ${last} 个字符，属于怪异折行：[${info.lines.join(', ')}]`)
-        }
-        // 侧栏导航只应在终端版式显示
-        if (layout.id === 'terminal' && info.railVisible !== true) {
-          throw new Error('终端版式下侧栏导航没有显示')
-        }
-        if (layout.id !== 'terminal' && info.railVisible === true) {
-          throw new Error(`版式「${layout.label}」不该显示侧栏导航`)
-        }
-      },
-    )
-    await report.shot(`版式 ${layout.label} 整页`)
+  /** 两种视口都要过：粗体排版最容易在窄屏折出孤立单字或横向溢出。 */
+  const VIEWPORTS = [
+    { name: '桌面 1280', width: 1280, height: 900 },
+    { name: '窄屏 390', width: 390, height: 844 },
+  ]
+
+  for (const viewport of VIEWPORTS) {
+    for (const layout of LAYOUTS) {
+      await report.check(
+        `${viewport.name}｜版式「${layout.label}」：无横向溢出、大标题无孤立单字、结构完整`,
+        async () => {
+          await page.setViewportSize({ width: viewport.width, height: viewport.height })
+          await page.goto(TARGET, { waitUntil: 'load' })
+          await page.evaluate(
+            (id) => document.documentElement.setAttribute('data-layout', id),
+            layout.id,
+          )
+          await page.waitForTimeout(600)
+          const info = await probe()
+          if (viewport.width === VIEWPORTS[0].width) measured[layout.id] = info
+          report.note(
+            `横向溢出 ${info.overflow}px ｜ h1 每行字数 [${info.lines.join(', ')}] ｜ 板块 ${info.sections.length} 个 ｜ 侧栏 ${info.railVisible ? '显示' : '隐藏'}`,
+          )
+          if (info.overflow > 0) throw new Error(`出现横向溢出 ${info.overflow}px`)
+          if (info.sections.length < 11) {
+            throw new Error(`板块数仅 ${info.sections.length} 个，结构钩子可能有缺失`)
+          }
+          const last = info.lines.at(-1)
+          if (info.lines.length > 1 && last !== undefined && last <= 2) {
+            throw new Error(
+              `大标题末行只剩 ${last} 个字符，属于怪异折行：[${info.lines.join(', ')}]`,
+            )
+          }
+          // 侧栏导航只应在终端版式显示
+          if (layout.id === 'terminal' && info.railVisible !== true) {
+            throw new Error('终端版式下侧栏导航没有显示')
+          }
+          if (layout.id !== 'terminal' && info.railVisible === true) {
+            throw new Error(`版式「${layout.label}」不该显示侧栏导航`)
+          }
+        },
+      )
+      await report.shot(`${viewport.name}｜版式 ${layout.label}`)
+    }
   }
 
   await report.check('三套版式的板块顺序与条目数完全一致（版式只改编排，不改内容）', async () => {

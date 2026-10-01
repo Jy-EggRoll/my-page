@@ -1,0 +1,23 @@
+---
+import '../styles/global.css';
+import { withBase } from '../utils/url';
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
+    <meta name="generator" content={Astro.generator} />
+    <title>脚手架就绪</title>
+  </head>
+  <body class="flex min-h-screen items-center justify-center">
+    <main class="text-center">
+      <h1 class="text-2xl font-bold">Phase 1 冒烟测试</h1>
+      <p class="mt-2 text-sm opacity-70">
+        用于验证构建与部署链路。页面内容会在 Phase 2 / Phase 4 被真实站点替换。
+      </p>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+// @ts-check
+import { defineConfig } from 'astro/config';
+import tailwindcss from '@tailwindcss/vite';
+
+export default defineConfig({
+  site: 'https://jy-eggroll.github.io',
+  // 子路径部署：所有内部链接与资源必须经由 src/utils/url.ts 的 withBase()，
+  // 禁止在组件里出现裸路径。
+  base: '/my-page',
+  vite: {
+    plugins: [tailwindcss()],
+  },
+});

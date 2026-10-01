@@ -1,0 +1,59 @@
+/*
+ * L1 语义令牌层。
+ *
+ * 组件只消费这里的令牌，不允许出现具体色值或尺寸；
+ * 各主题在 ./themes/*.css 里用 [data-theme] 重映射这批令牌，组件无需改动。
+ *
+ * 用 `static` 修饰符是必须的：默认情况下 Tailwind v4 会把「没有被任何 utility 引用」
+ * 的令牌摇树掉，那样主题覆盖就失去 :root 上的默认值兜底。static 强制全部输出。
+ * 不要改成 `inline` —— inline 会把值直接内联进 utility，运行时切换主题会失效。
+ */
+@theme static {
+  /* 表面与描边 */
+  --color-bg: oklch(97.5% 0.004 255);
+  --color-surface: oklch(100% 0 0);
+  --color-surface-raised: oklch(94.5% 0.006 255);
+  --color-border: oklch(89% 0.008 255);
+
+  /* 文本层级 */
+  --color-fg: oklch(24% 0.012 255);
+  --color-fg-muted: oklch(48% 0.014 255);
+  --color-fg-subtle: oklch(64% 0.012 255);
+
+  /* 强调色 */
+  --color-accent: oklch(52% 0.176 262);
+  --color-accent-fg: oklch(100% 0 0);
+  --color-accent-soft: oklch(94% 0.036 262);
+  --color-ring: oklch(52% 0.176 262);
+
+  /* 形状 */
+  --radius-card: 1rem;
+  --radius-control: 0.5rem;
+  --radius-pill: 9999px;
+
+  /* 质感（blur-panel 同时驱动 blur-* 与 backdrop-blur-*） */
+  --blur-panel: 0px;
+
+  /* 动效：transition-* 的时长默认取自 --default-transition-duration，
+     主题改这一个令牌就等于改全站过渡节奏，class 里不必再写 duration-* */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --default-transition-duration: 150ms;
+}
+
+/*
+ * 阴影不能走 @theme + shadow-* 工具：Tailwind 会把阴影的值内联进 utility
+ * （只把颜色剥成变量），运行时切换主题改不动它。
+ * 所以改用普通自定义属性，消费时写任意属性语法：[box-shadow:var(--elevation-card)]
+ */
+:root {
+  --elevation-card: 0 1px 2px oklch(24% 0.012 255 / 0.06), 0 8px 24px oklch(24% 0.012 255 / 0.07);
+  --elevation-raised:
+    0 2px 6px oklch(24% 0.012 255 / 0.08), 0 18px 44px oklch(24% 0.012 255 / 0.12);
+}
+
+@layer base {
+  html {
+    /* 目前只有浅色方案，显式声明可避免浏览器对表单控件做自动暗化 */
+    color-scheme: light;
+  }
+}

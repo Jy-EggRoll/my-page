@@ -1,0 +1,49 @@
+---
+import '../styles/global.css';
+import { DEFAULT_THEME, THEME_ATTRIBUTE, THEME_STORAGE_KEY } from '../config/themes';
+import { withBase } from '../utils/url';
+
+interface Props {
+  title: string;
+  description?: string;
+  lang?: string;
+}
+
+const { title, description, lang = 'zh-CN' } = Astro.props;
+---
+
+<!doctype html>
+<html lang={lang} data-theme={DEFAULT_THEME}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+
+    <!--
+      必须内联且同步执行：要在首次绘制之前把用户上次选的主题写回 <html>，
+      否则会先闪一下默认主题再跳变（FOUC）。模块化脚本被延迟执行，做不到这点，
+      所以这里刻意保留一段重复逻辑。令牌名来自配置，不写死。
+    -->
+    <script
+      is:inline
+      define:vars={{ attr: THEME_ATTRIBUTE, key: THEME_STORAGE_KEY, fallback: DEFAULT_THEME }}
+    >
+      (function () {
+        var stored = null;
+        try {
+          stored = localStorage.getItem(key);
+        } catch (error) {
+          /* 隐私模式下 localStorage 可能不可用，退回默认主题即可 */
+        }
+        document.documentElement.setAttribute(attr, stored || fallback);
+      })();
+    </script>
+  </head>
+  <body
+    class="min-h-screen bg-bg text-fg antialiased transition-colors ease-standard"
+  >
+    <slot />
+  </body>
+</html>

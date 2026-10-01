@@ -12,12 +12,8 @@
 }
 
 [data-layout='bento'] .site-header,
-[data-layout='bento'] .site-footer,
-[data-layout='bento'] .notice {
+[data-layout='bento'] .site-footer {
   grid-column: 1 / -1;
-}
-[data-layout='bento'] .notice {
-  margin-top: 0;
 }
 
 [data-layout='bento'] .section-shell {

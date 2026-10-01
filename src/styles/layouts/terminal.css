@@ -78,11 +78,6 @@
 [data-layout='terminal'] .section-label {
   margin-left: auto;
 }
-[data-layout='terminal'] .notice {
-  margin-top: 0;
-  border-radius: var(--radius-control);
-}
-
 [data-layout='terminal'] .hero-headline {
   font-family: var(--font-mono);
   font-size: clamp(1.375rem, 3vw, 2rem);

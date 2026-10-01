@@ -128,7 +128,9 @@ async function metrics(page) {
     // 改测真正随主题变化的量：控件圆角、标签圆角、字距、行高、面板模糊令牌。
     const chip = document.querySelector('[data-chip]')
     const chipStyle = chip ? getComputedStyle(chip) : null
-    const control = document.querySelector('.notice')
+    // 控件圆角的量尺用次按钮：它同样消费 --radius-control，且三种版式、两种语言下
+    // 都必然存在（原先拿提示条当量尺，提示条已随页眉进度文案一并移除）。
+    const control = document.querySelector('.btn-secondary')
     const controlStyle = control ? getComputedStyle(control) : null
     const heading = document.querySelector('h1')
     const headingStyle = heading ? getComputedStyle(heading) : null
@@ -155,7 +157,7 @@ async function metrics(page) {
       paragraphLeading: paragraphStyle ? paragraphStyle.lineHeight : '(无段落)',
       // 次要文字的对比度。此前只测了正文色，导致浅色主题下次要文字成片不达标
       // （独立复核实测 106 处低于 AA）却没被这套断言发现。
-      subtleSamples: ['.entry-meta', '.entry-subtitle', '.section-label', '.site-footer', '.notice']
+      subtleSamples: ['.entry-meta', '.entry-subtitle', '.section-label', '.site-footer']
         .map((selector) => {
           const el = document.querySelector(selector)
           if (!el) return null
@@ -286,7 +288,7 @@ async function appearanceSuite(page, report) {
     report.note([...backgrounds].join('  |  '))
   })
 
-  await report.check('次要文字（元信息/副标题/页脚/提示条）也达到 WCAG AA（4.5:1）', async () => {
+  await report.check('次要文字（元信息/副标题/页脚）也达到 WCAG AA（4.5:1）', async () => {
     if (collected.length !== COMBOS.length) {
       throw new Error(`只采到 ${collected.length} 组数据，无法判断次要文字对比度`)
     }

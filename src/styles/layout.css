@@ -41,18 +41,6 @@
   color: var(--color-fg-subtle);
 }
 
-/* ---------- 提示条 ---------- */
-.notice {
-  margin-top: 1.5rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-control);
-  background: var(--color-accent-soft);
-  padding: 0.5rem 1rem;
-  font-size: 0.75rem;
-  line-height: var(--leading-body);
-  color: var(--color-fg-muted);
-}
-
 /* ---------- 首屏 ---------- */
 /* 字号与显示行高属于版式；字距归主题（--tracking-heading），主题换了它必须跟着变。
    text-wrap: pretty 让浏览器主动避免「末行只剩一两个字」的怪折行（窄屏尤其明显）。 */
@@ -583,7 +571,6 @@
     padding: 0.25rem 0;
   }
   /* 这几处此前仍是 12px，统一提到 13px */
-  .notice,
   .site-footer,
   .section-path,
   .contact-handle,

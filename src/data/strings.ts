@@ -9,7 +9,6 @@ export interface SiteStrings {
   brand: string;
   pageTitle: string;
   pageDescription: string;
-  notice: string;
   linkGithub: string;
   linkBlog: string;
 
@@ -38,7 +37,6 @@ export const STRINGS: Record<Locale, SiteStrings> = {
     brand: '蛋卷儿',
     pageTitle: '蛋卷儿 · 个人主页',
     pageDescription: '将工程美学融入技术细节 —— 个人主页与开源项目索引。',
-    notice: '原型站点：4 套主题与中英双语均可实时切换，内容与正式文案仍在迭代。',
     linkGithub: 'GitHub',
     linkBlog: '博客',
 
@@ -62,8 +60,6 @@ export const STRINGS: Record<Locale, SiteStrings> = {
     pageTitle: 'EggRoll · Personal site',
     pageDescription:
       'Engineering aesthetics woven into technical detail — personal site and open-source index.',
-    notice:
-      'Prototype: four themes and two languages can be switched instantly. Content and final copy are still in progress.',
     linkGithub: 'GitHub',
     linkBlog: 'Blog',
 

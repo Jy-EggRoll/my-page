@@ -58,12 +58,6 @@
 [data-layout='editorial'] .entry-item--grid .entry-title {
   font-size: 1rem;
 }
-[data-layout='editorial'] .notice {
-  border: 0;
-  background: transparent;
-  padding: 0;
-}
-
 /* 联系方式也去卡片化，保持编辑式「只留排版与细线」的一致语言 */
 [data-layout='editorial'] .contact-list {
   grid-template-columns: minmax(0, 1fr);

@@ -29,6 +29,10 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      # 类型检查必须在构建前跑：astro build 本身不做类型检查，
+      # 放在这里才能让内容/组件的类型错误挡住部署。
+      - name: Type check
+        run: pnpm check
       - name: Build
         run: pnpm build
       - name: Configure Pages

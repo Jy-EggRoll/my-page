@@ -180,12 +180,22 @@ async function settledMetrics(page) {
   return metrics(page)
 }
 
-/** DOM 结构指纹：去掉会随交互变化的 aria-pressed，只留标签与类名。 */
+/**
+ * DOM 结构指纹：只保留标签名与类名，丢掉文本内容。
+ * 丢掉文本是必须的 —— 否则中英文页的指纹必然不同（字数不一样），
+ * 也就无法用它证明「一套组件服务所有外观/所有语言」。
+ */
 async function structureFingerprint(page) {
   return page.evaluate(() => {
     const clone = document.body.cloneNode(true)
     clone.querySelectorAll('[aria-pressed]').forEach((el) => el.removeAttribute('aria-pressed'))
-    return clone.innerHTML.replace(/\s+/g, ' ').trim().length
+    const walk = (node) => {
+      if (node.nodeType !== Node.ELEMENT_NODE) return ''
+      const element = /** @type {Element} */ (node)
+      const children = [...element.childNodes].map(walk).join('')
+      return `<${element.tagName.toLowerCase()} class="${element.getAttribute('class') ?? ''}">${children}</${element.tagName.toLowerCase()}>`
+    }
+    return walk(clone)
   })
 }
 
@@ -265,16 +275,16 @@ async function appearanceSuite(page, report) {
   })
 
   await report.check('所有组合共用同一套 DOM（一套组件服务全部外观）', async () => {
-    const lengths = []
+    const fingerprints = []
     for (const combo of COMBOS) {
       await selectCombo(page, combo)
       await page.waitForTimeout(120)
-      lengths.push(await structureFingerprint(page))
+      fingerprints.push(await structureFingerprint(page))
     }
-    if (new Set(lengths).size !== 1) {
-      throw new Error(`DOM 结构指纹不一致：${lengths.join(', ')}`)
+    if (new Set(fingerprints).size !== 1) {
+      throw new Error('切换外观改变了 DOM 结构，说明主题没有完全走令牌层')
     }
-    report.note(`所有组合 DOM 指纹一致，长度 ${lengths[0]}`)
+    report.note(`所有组合 DOM 结构一致，指纹长度 ${fingerprints[0].length}`)
   })
 
   await report.check('刷新后主题与明暗都保持（两个维度各自持久化）', async () => {
@@ -372,9 +382,71 @@ async function i18nSuite(page, report) {
   })
 }
 
+/** 套件三：内容完整性（各语言板块齐全、条目数一致、结构一致）。 */
+async function contentSuite(page, report) {
+  report.section('内容套件')
+
+  const SECTION_LABELS = {
+    zh: ['关于我', '技能与经历', '开源项目', '联系方式'],
+    en: ['About', 'Skills & experience', 'Open source', 'Contact'],
+  }
+
+  const readContent = async () =>
+    page.evaluate(() => ({
+      headings: [...document.querySelectorAll('h2')].map((el) => (el.textContent ?? '').trim()),
+      timelineCount: document.querySelectorAll('section ol > li').length,
+      contactCount: document.querySelectorAll('section ul > li').length,
+      projectCount: document.querySelectorAll('article').length,
+    }))
+
+  const measured = {}
+
+  for (const locale of ['zh', 'en']) {
+    await report.check(`${locale === 'zh' ? '中文' : '英文'}页板块齐全且条目非空`, async () => {
+      await page.goto(locale === 'zh' ? TARGET : EN_URL, { waitUntil: 'load' })
+      await page.waitForSelector('h1', { timeout: 15000 })
+      const content = await readContent()
+      measured[locale] = content
+      report.note(`板块：${content.headings.join(' / ')}`)
+      report.note(
+        `时间线 ${content.timelineCount} 条 ｜ 联系 ${content.contactCount} 条 ｜ 项目 ${content.projectCount} 条`,
+      )
+      const missing = SECTION_LABELS[locale].filter((label) => !content.headings.includes(label))
+      if (missing.length > 0) throw new Error(`缺少板块标题：${missing.join(', ')}`)
+      if (content.timelineCount < 3 || content.contactCount < 3 || content.projectCount < 3) {
+        throw new Error(
+          `条目数不足：时间线 ${content.timelineCount}、联系 ${content.contactCount}、项目 ${content.projectCount}`,
+        )
+      }
+    })
+  }
+
+  await report.check('两种语言的条目数与 DOM 结构一致（一套组件服务两种语言）', async () => {
+    const zh = measured.zh
+    const en = measured.en
+    if (
+      zh.timelineCount !== en.timelineCount ||
+      zh.contactCount !== en.contactCount ||
+      zh.projectCount !== en.projectCount
+    ) {
+      throw new Error(
+        `条目数不一致：时间线 ${zh.timelineCount}/${en.timelineCount}、联系 ${zh.contactCount}/${en.contactCount}、项目 ${zh.projectCount}/${en.projectCount}`,
+      )
+    }
+    await page.goto(TARGET, { waitUntil: 'load' })
+    const zhFingerprint = await structureFingerprint(page)
+    await page.goto(EN_URL, { waitUntil: 'load' })
+    const enFingerprint = await structureFingerprint(page)
+    if (zhFingerprint !== enFingerprint) {
+      throw new Error('两种语言的 DOM 结构不一致，说明存在文案之外的结构差异')
+    }
+    report.note(`两种语言 DOM 骨架一致，指纹长度 ${zhFingerprint.length}`)
+  })
+}
+
 async function main() {
-  const run = createRun({ root: ARTIFACTS_ROOT, title: '站点回归：外观 × 双语' })
-  const report = createReport({ title: '站点回归：外观 × 双语', run })
+  const run = createRun({ root: ARTIFACTS_ROOT, title: '站点回归：外观 × 双语 × 内容' })
+  const report = createReport({ title: '站点回归：外观 × 双语 × 内容', run })
   const handle = await launchBrowser({ headless: true })
 
   let page
@@ -395,8 +467,18 @@ async function main() {
     report.note(`英文页：${EN_URL}`)
     report.note(`浏览器：${handle.executablePath}（${handle.source}）`)
 
+    // 截图是视口截图，而页面远比默认视口高。先把视口调到整页高度，
+    // 否则回看页里只能看到上半页，下方的板块根本没有证据。
+    await page.goto(TARGET, { waitUntil: 'load' })
+    await page.waitForSelector('h1', { timeout: 15000 })
+    const pageHeight = await page.evaluate(() => document.body.scrollHeight)
+    const captureHeight = Math.min(Math.max(pageHeight, 900), 4000)
+    await page.setViewportSize({ width: 1280, height: captureHeight })
+    report.note(`视口高度设为 ${captureHeight}px（页面实际 ${pageHeight}px）`)
+
     await appearanceSuite(page, report)
     await i18nSuite(page, report)
+    await contentSuite(page, report)
 
     await report.check('整个过程中控制台没有任何报错', async () => {
       if (consoleErrors.length > 0) {

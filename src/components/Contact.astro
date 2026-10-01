@@ -1,0 +1,33 @@
+---
+import type { Locale } from '../config/i18n';
+import { CONTACTS } from '../config/site';
+import { stringsFor } from '../data/strings';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = stringsFor(locale);
+---
+
+<section class="mt-12">
+  <h2 class="text-sm font-semibold tracking-heading text-fg-subtle">{t.contactsLabel}</h2>
+  <ul class="mt-4 grid gap-3 sm:grid-cols-2">
+    {
+      CONTACTS.map((contact) => (
+        <li>
+          <a
+            href={contact.href}
+            target={contact.href.startsWith('http') ? '_blank' : undefined}
+            rel={contact.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+            class="flex items-center justify-between gap-3 rounded-card border border-border bg-surface px-4 py-3 backdrop-blur-panel transition-shadow ease-standard [box-shadow:var(--elevation-card)] hover:[box-shadow:var(--elevation-raised)]"
+          >
+            <span class="text-sm font-medium">{t.contactLabels[contact.id]}</span>
+            <span class="font-mono text-xs text-fg-subtle">{contact.handle}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</section>

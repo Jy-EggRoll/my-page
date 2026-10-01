@@ -1,30 +1,52 @@
 ---
 import '../styles/global.css';
 import { APPEARANCE, APPEARANCE_INIT, resolveDefault } from '../config/appearance';
+import { DEFAULT_LOCALE, LOCALES, LOCALE_META, type Locale } from '../config/i18n';
 import { withBase } from '../utils/url';
+import { getRelativeLocaleUrl } from 'astro:i18n';
 
 interface Props {
   title: string;
   description?: string;
-  lang?: string;
+  locale: Locale;
 }
 
-const { title, description, lang = 'zh-CN' } = Astro.props;
+const { title, description, locale } = Astro.props;
 
 const initialAttributes: Record<string, string> = {};
 for (const group of APPEARANCE) {
   initialAttributes[group.attribute] = resolveDefault(group);
 }
+
+/**
+ * 同一页面在指定语言下的绝对地址，用于 canonical 与 hreflang。
+ * getRelativeLocaleUrl 返回的地址**已经带上了 base**（子路径），不要再套 withBase，
+ * 否则会变成 /my-page/my-page/...。origin 取自 Astro.url，不写死域名。
+ */
+function absoluteHomeUrl(target: Locale): string {
+  return new URL(getRelativeLocaleUrl(target, '/'), Astro.url.origin).href;
+}
 ---
 
 <!doctype html>
-<html lang={lang} {...initialAttributes}>
+<html lang={LOCALE_META[locale].htmlLang} {...initialAttributes}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
     <title>{title}</title>
     {description && <meta name="description" content={description} />}
+    <link rel="canonical" href={absoluteHomeUrl(locale)} />
+    {
+      LOCALES.map((target) => (
+        <link
+          rel="alternate"
+          hreflang={LOCALE_META[target].htmlLang}
+          href={absoluteHomeUrl(target)}
+        />
+      ))
+    }
+    <link rel="alternate" hreflang="x-default" href={absoluteHomeUrl(DEFAULT_LOCALE)} />
 
     <!--
       必须内联且同步执行：要在首次绘制之前把用户上次选的外观写回 <html>，

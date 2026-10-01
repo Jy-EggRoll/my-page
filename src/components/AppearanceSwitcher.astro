@@ -1,10 +1,18 @@
 ---
-import { APPEARANCE } from '../config/appearance';
+import { appearanceGroupsFor } from '../config/appearance';
+import type { Locale } from '../config/i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const groups = appearanceGroupsFor(locale);
 ---
 
 <div class="flex flex-wrap items-center gap-3">
   {
-    APPEARANCE.map((group) => (
+    groups.map((group) => (
       <div
         class="flex items-center gap-1 rounded-pill border border-border bg-surface-raised p-1"
         role="group"

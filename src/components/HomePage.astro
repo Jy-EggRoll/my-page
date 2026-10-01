@@ -1,0 +1,78 @@
+---
+import type { Locale } from '../config/i18n';
+import { SITE_LINKS } from '../config/site';
+import { stringsFor } from '../data/strings';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from './SiteHeader.astro';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = stringsFor(locale);
+---
+
+<BaseLayout locale={locale} title={t.pageTitle} description={t.pageDescription}>
+  <div class="mx-auto max-w-5xl px-6 py-10">
+    <SiteHeader locale={locale} />
+
+    <p
+      class="mt-8 rounded-control border border-border bg-accent-soft px-4 py-2 text-xs leading-body text-fg-muted"
+    >
+      {t.notice}
+    </p>
+
+    <section class="mt-10">
+      <h1 class="text-4xl font-bold tracking-heading sm:text-5xl">{t.heroTitle}</h1>
+      <p class="mt-4 max-w-2xl text-lg leading-body text-fg-muted">{t.heroSubtitle}</p>
+      <div class="mt-6 flex flex-wrap gap-3">
+        <a
+          href={SITE_LINKS.github}
+          class="rounded-control bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-opacity ease-standard hover:opacity-90"
+        >
+          {t.linkGithub}
+        </a>
+        <a
+          href={SITE_LINKS.blog}
+          class="rounded-control border border-border bg-surface px-4 py-2 text-sm font-medium transition-colors ease-standard hover:bg-surface-raised"
+        >
+          {t.linkBlog}
+        </a>
+      </div>
+    </section>
+
+    <section class="mt-10">
+      <h2 class="text-sm font-semibold tracking-heading text-fg-subtle">{t.skillsLabel}</h2>
+      <div class="mt-3 flex flex-wrap gap-2">
+        {
+          t.skills.map((skill) => (
+            <span class="rounded-chip bg-accent-soft px-3 py-1 text-xs font-medium text-accent">
+              {skill}
+            </span>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="mt-10">
+      <h2 class="text-sm font-semibold tracking-heading text-fg-subtle">{t.projectsLabel}</h2>
+      <div class="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {
+          t.projects.map((project) => (
+            <article class="rounded-card border border-border bg-surface p-5 backdrop-blur-panel transition-shadow ease-standard [box-shadow:var(--elevation-card)] hover:[box-shadow:var(--elevation-raised)]">
+              <h3 class="font-mono text-base font-semibold tracking-heading">{project.name}</h3>
+              <p class="mt-2 text-sm leading-body text-fg-muted">{project.summary}</p>
+              <p class="mt-4 font-mono text-xs text-fg-subtle">{project.meta}</p>
+              <p class="mt-1 text-xs font-medium text-accent">{project.highlight}</p>
+            </article>
+          ))
+        }
+      </div>
+    </section>
+
+    <footer class="mt-14 border-t border-border pt-6 text-xs leading-body text-fg-subtle">
+      {t.footer}
+    </footer>
+  </div>
+</BaseLayout>

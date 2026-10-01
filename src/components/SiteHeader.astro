@@ -1,0 +1,26 @@
+---
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import type { Locale } from '../config/i18n';
+import { stringsFor } from '../data/strings';
+import AppearanceSwitcher from './AppearanceSwitcher.astro';
+import LangSwitcher from './LangSwitcher.astro';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+---
+
+<header class="flex flex-wrap items-center justify-between gap-4">
+  <a
+    href={getRelativeLocaleUrl(locale, '/')}
+    class="text-sm font-semibold tracking-heading"
+  >
+    {stringsFor(locale).brand}
+  </a>
+  <div class="flex flex-wrap items-center gap-3">
+    <AppearanceSwitcher locale={locale} />
+    <LangSwitcher locale={locale} />
+  </div>
+</header>

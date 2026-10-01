@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
- * 外观回归：用真实浏览器验证「主题风格 × 明暗」两个正交维度真的能切换、真的持久化、
- * 视觉真的变化，并客观计算正文对比度。
+ * 站点回归验证：用真实浏览器跑两个套件。
+ *   1) 外观套件 —— 主题 × 明暗的全部组合能切换、能持久化、视觉真的变化、对比度达标
+ *   2) 双语套件 —— 中英静态路由、hreflang、语言切换，以及两个维度互不干扰
  *
  * 这是**本机的可视回归工具**，不是仓库依赖，也**不在 CI 里跑**：
  * 它复用本机安装的 browser-verify skill（定位本机 Chromium、清代理变量、自动截图、
@@ -11,8 +12,8 @@
  * ~/.qoder-cn/skills/browser-verify；找不到时会给出清晰的安装/指路提示并非零退出。
  *
  * 用法：
- *   1. 先起被测站点：pnpm build && pnpm preview --port 4321
- *   2. 跑回归：pnpm verify:appearance
+ *   1. 先起被测站点：pnpm build && pnpm exec astro preview --port 4321
+ *   2. 跑回归：pnpm verify
  *   可用环境变量 TARGET_URL 覆盖被测地址（默认 http://127.0.0.1:4321/my-page/）。
  *   注意 Astro 7 同一项目只允许一个 preview 实例，重启前先 `pnpm exec astro preview stop`。
  */
@@ -28,13 +29,12 @@ const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const SKILL_DIR =
   process.env.BROWSER_VERIFY_SKILL ?? join(homedir(), '.qoder-cn', 'skills', 'browser-verify')
 
-/** 被测地址：默认本地 preview，可用 TARGET_URL 覆盖。 */
+/** 默认语言的地址；英文站在它的 /en/ 下。 */
 const TARGET = process.env.TARGET_URL ?? 'http://127.0.0.1:4321/my-page/'
+const EN_URL = `${TARGET.replace(/\/$/, '')}/en/`
 
 /** 现场产物目录：放在仓库下被 git 忽略的 .verify/，不用易失的 /tmp。 */
 const ARTIFACTS_ROOT = join(REPO_ROOT, '.verify')
-
-const TITLE = 'Phase 2 外观回归：主题 × 明暗 四组合'
 
 /** 按钮文案来自 src/config/appearance.ts，改配置时这两个清单要同步。 */
 const THEME_OPTIONS = [
@@ -73,7 +73,7 @@ async function loadLib(name) {
         `它不属于仓库依赖，也不在 CI 里跑。请任选其一：\n\n` +
         `  1. 把该 skill 装到默认位置：${join(homedir(), '.qoder-cn', 'skills', 'browser-verify')}\n` +
         `     （目录内需有 lib/browser.mjs、lib/report.mjs、lib/artifacts.mjs，并在其中 pnpm install）\n` +
-        `  2. 用环境变量指路：BROWSER_VERIFY_SKILL=/path/to/browser-verify pnpm verify:appearance\n\n` +
+        `  2. 用环境变量指路：BROWSER_VERIFY_SKILL=/path/to/browser-verify pnpm verify\n\n` +
         `当前 skill 目录：${SKILL_DIR}${process.env.BROWSER_VERIFY_SKILL ? '（来自 BROWSER_VERIFY_SKILL）' : '（默认位置）'}\n\n`,
     )
     process.exit(1)
@@ -87,7 +87,7 @@ const { createRun } = await loadLib('artifacts.mjs')
 
 /**
  * 读「实际渲染出来的东西」——计算样式才是用户看得见的部分。
- * 其中对比度在页面内用 canvas 把 okLCH 计算色转成 RGB 再按 WCAG 公式算，
+ * 对比度在页面内用 canvas 把 okLCH 计算色转成 RGB 再按 WCAG 公式算，
  * 因为深色模式最容易出的问题就是文字对比度不足。
  */
 async function metrics(page) {
@@ -131,6 +131,7 @@ async function metrics(page) {
     return {
       theme: document.documentElement.getAttribute('data-theme'),
       scheme: document.documentElement.getAttribute('data-scheme'),
+      htmlLang: document.documentElement.getAttribute('lang'),
       // 页面底色画在 html 上（这样 -z-10 的装饰背景层才可见），body 是透明的，
       // 所以底色必须从 documentElement 读，读 body 会拿到 rgba(0,0,0,0)。
       pageBg: rootStyle.backgroundColor,
@@ -143,7 +144,6 @@ async function metrics(page) {
       cardBlur: cardStyle
         ? cardStyle.backdropFilter || cardStyle.webkitBackdropFilter || 'none'
         : '(无卡片)',
-      cardBorderColor: cardStyle ? cardStyle.borderTopColor : '(无卡片)',
       chipRadius: chipStyle ? chipStyle.borderRadius : '(无徽章)',
       headingTracking: headingStyle ? headingStyle.letterSpacing : '(无标题)',
       paragraphLeading: paragraphStyle ? paragraphStyle.lineHeight : '(无段落)',
@@ -175,7 +175,6 @@ async function waitForTransitionsToSettle(page) {
     })
 }
 
-/** 等过渡结束后取值。 */
 async function settledMetrics(page) {
   await waitForTransitionsToSettle(page)
   return metrics(page)
@@ -202,9 +201,180 @@ async function selectCombo(page, combo) {
   )
 }
 
+/** 套件一：外观（主题 × 明暗）。 */
+async function appearanceSuite(page, report) {
+  report.section('外观套件')
+
+  await report.check('页面可打开，两个外观维度的控件都在', async () => {
+    await page.goto(TARGET, { waitUntil: 'load' })
+    await page.waitForSelector('article', { timeout: 15000 })
+    for (const label of [...THEME_OPTIONS, ...SCHEME_OPTIONS].map((option) => option.label)) {
+      const count = await page.getByRole('button', { name: label }).count()
+      if (count !== 1) throw new Error(`按钮「${label}」应恰好 1 个，实际 ${count} 个`)
+    }
+  })
+
+  const collected = []
+
+  for (const combo of COMBOS) {
+    report.section(`${combo.theme} · ${combo.scheme}`)
+    await report.check(`切换到 ${combo.theme} · ${combo.scheme}（真实点击）`, async () => {
+      await selectCombo(page, combo)
+      const m = await settledMetrics(page)
+      collected.push({ ...combo, m })
+      report.note(`属性 data-theme=${m.theme} data-scheme=${m.scheme}`)
+      report.note(
+        `正文对比度 ${m.bodyContrast}:1 ｜ 卡片圆角 ${m.cardRadius} ｜ 徽章圆角 ${m.chipRadius}`,
+      )
+      report.note(
+        `标题字距 ${m.headingTracking} ｜ 正文行高 ${m.paragraphLeading} ｜ 面板模糊 ${m.cardBlur}`,
+      )
+    })
+    await report.shot(`${combo.theme} · ${combo.scheme} 整页`)
+  }
+
+  await report.check('所有组合的正文对比度都达到 WCAG AA（≥ 4.5:1）', async () => {
+    // 先确认真的采到全部数据，否则断言会因为数组为空而空过——那是假通过。
+    if (collected.length !== COMBOS.length) {
+      throw new Error(`只采到 ${collected.length} 组数据，期望 ${COMBOS.length} 组，无法判断对比度`)
+    }
+    const bad = collected.filter((entry) => entry.m.bodyContrast < 4.5)
+    if (bad.length > 0) {
+      throw new Error(bad.map((e) => `${e.theme}·${e.scheme} 仅 ${e.m.bodyContrast}:1`).join('；'))
+    }
+    report.note(collected.map((e) => `${e.theme}·${e.scheme}=${e.m.bodyContrast}`).join('  '))
+  })
+
+  await report.check('所有组合的页面底色互不相同（明暗与主题都真的生效）', async () => {
+    const backgrounds = new Set(collected.map((entry) => entry.m.pageBg))
+    if (backgrounds.size !== COMBOS.length) {
+      throw new Error(`期望 ${COMBOS.length} 种底色，实际 ${backgrounds.size} 种`)
+    }
+    report.note([...backgrounds].join('  |  '))
+  })
+
+  await report.check('两套主题的形状语言确实不同（圆角/徽章/模糊/字距/行高）', async () => {
+    const fluent = collected.find((entry) => entry.themeId === 'fluent')
+    const material = collected.find((entry) => entry.themeId === 'material')
+    const fields = ['cardRadius', 'chipRadius', 'cardBlur', 'headingTracking', 'paragraphLeading']
+    const unchanged = fields.filter((field) => fluent.m[field] === material.m[field])
+    if (unchanged.length > 0) {
+      throw new Error(`这些形状/排版字段在两套主题间没有区别：${unchanged.join(', ')}`)
+    }
+    report.note(fields.map((f) => `${f}: ${fluent.m[f]} → ${material.m[f]}`).join('  ｜  '))
+  })
+
+  await report.check('所有组合共用同一套 DOM（一套组件服务全部外观）', async () => {
+    const lengths = []
+    for (const combo of COMBOS) {
+      await selectCombo(page, combo)
+      await page.waitForTimeout(120)
+      lengths.push(await structureFingerprint(page))
+    }
+    if (new Set(lengths).size !== 1) {
+      throw new Error(`DOM 结构指纹不一致：${lengths.join(', ')}`)
+    }
+    report.note(`所有组合 DOM 指纹一致，长度 ${lengths[0]}`)
+  })
+
+  await report.check('刷新后主题与明暗都保持（两个维度各自持久化）', async () => {
+    const last = COMBOS.at(-1)
+    await selectCombo(page, last)
+    await page.reload({ waitUntil: 'load' })
+    await page.waitForSelector('article', { timeout: 15000 })
+    const after = await settledMetrics(page)
+    if (after.theme !== last.themeId || after.scheme !== last.schemeId) {
+      throw new Error(`刷新后期望 ${last.themeId}/${last.schemeId}，实际 ${after.theme}/${after.scheme}`)
+    }
+  })
+}
+
+/** 套件二：中英双语静态路由与切换。 */
+async function i18nSuite(page, report) {
+  report.section('双语套件')
+
+  await report.check('中文页在根路径，<html lang> 与正文都是中文', async () => {
+    await page.goto(TARGET, { waitUntil: 'load' })
+    await page.waitForSelector('h1', { timeout: 15000 })
+    const m = await metrics(page)
+    const heading = (await page.locator('h1').textContent()) ?? ''
+    report.note(`lang=${m.htmlLang} ｜ 标题：${heading.trim()}`)
+    if (m.htmlLang !== 'zh-CN') throw new Error(`期望 lang=zh-CN，实际 ${m.htmlLang}`)
+    if (!/[\u4e00-\u9fa5]/.test(heading)) {
+      throw new Error(`中文页标题里没有汉字：${JSON.stringify(heading)}`)
+    }
+  })
+
+  await report.check('两种语言各输出 3 条 hreflang，且地址只带一层 /my-page', async () => {
+    const collect = async () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll('link[rel="alternate"][hreflang]')].map((el) => ({
+          hreflang: el.getAttribute('hreflang'),
+          href: el.getAttribute('href') ?? '',
+        })),
+      )
+    const zhLinks = await collect()
+    report.note(zhLinks.map((l) => `${l.hreflang}=${l.href}`).join('  '))
+    if (zhLinks.length !== 3) {
+      throw new Error(`期望 3 条 hreflang（zh-CN/en/x-default），实际 ${zhLinks.length} 条`)
+    }
+    const doubled = zhLinks.filter((l) => /\/my-page\/my-page/.test(l.href))
+    if (doubled.length > 0) {
+      throw new Error(`hreflang 里出现重复子路径：${doubled.map((l) => l.href).join(', ')}`)
+    }
+    await page.goto(EN_URL, { waitUntil: 'load' })
+    const enLinks = await collect()
+    if (enLinks.length !== 3) {
+      throw new Error(`英文页期望 3 条 hreflang，实际 ${enLinks.length} 条`)
+    }
+  })
+
+  await report.check('点语言切换器能切到英文页，且正文变成英文', async () => {
+    await page.goto(TARGET, { waitUntil: 'load' })
+    await page.waitForSelector('h1', { timeout: 15000 })
+    await page.getByRole('link', { name: 'English' }).click()
+    await page.waitForFunction(() => document.documentElement.getAttribute('lang') === 'en', undefined, {
+      timeout: 5000,
+    })
+    const heading = ((await page.locator('h1').textContent()) ?? '').trim()
+    report.note(`导航到 ${page.url()} ｜ 标题：${heading}`)
+    if (!/\/my-page\/en\/$/.test(page.url())) {
+      throw new Error(`期望跳到 /my-page/en/，实际 ${page.url()}`)
+    }
+    if (/[\u4e00-\u9fa5]/.test(heading)) {
+      throw new Error(`英文页标题里仍有汉字：${JSON.stringify(heading)}`)
+    }
+  })
+
+  await report.check('英文页的外观控件也跟着翻译（Light/Dark 而非浅色/深色）', async () => {
+    const hasEnglishLabels = await page.getByRole('button', { name: 'Light' }).count()
+    const hasChineseLabels = await page.getByRole('button', { name: '浅色' }).count()
+    if (hasEnglishLabels !== 1 || hasChineseLabels !== 0) {
+      throw new Error(
+        `期望英文页只有 Light、没有浅色，实际 Light=${hasEnglishLabels}、浅色=${hasChineseLabels}`,
+      )
+    }
+  })
+
+  await report.check('切回中文页正常，且外观选择跨语言保留（两个维度互不干扰）', async () => {
+    const before = await settledMetrics(page)
+    await page.getByRole('link', { name: '中文' }).click()
+    await page.waitForFunction(() => document.documentElement.getAttribute('lang') === 'zh-CN', undefined, {
+      timeout: 5000,
+    })
+    const after = await settledMetrics(page)
+    report.note(`英文页时 ${before.theme}/${before.scheme} → 切回中文后 ${after.theme}/${after.scheme}`)
+    if (after.theme !== before.theme || after.scheme !== before.scheme) {
+      throw new Error(
+        `切语言后外观被重置了：${before.theme}/${before.scheme} → ${after.theme}/${after.scheme}`,
+      )
+    }
+  })
+}
+
 async function main() {
-  const run = createRun({ root: ARTIFACTS_ROOT, title: TITLE })
-  const report = createReport({ title: TITLE, run })
+  const run = createRun({ root: ARTIFACTS_ROOT, title: '站点回归：外观 × 双语' })
+  const report = createReport({ title: '站点回归：外观 × 双语', run })
   const handle = await launchBrowser({ headless: true })
 
   let page
@@ -221,92 +391,14 @@ async function main() {
     })
     page.on('pageerror', (error) => consoleErrors.push(`pageerror: ${error.message}`))
 
-    report.note(`目标：${TARGET}`)
+    report.note(`中文页：${TARGET}`)
+    report.note(`英文页：${EN_URL}`)
     report.note(`浏览器：${handle.executablePath}（${handle.source}）`)
 
-    await report.check('0. 页面可打开，两个维度的切换控件都在', async () => {
-      await page.goto(TARGET, { waitUntil: 'load' })
-      await page.waitForSelector('article', { timeout: 15000 })
-      for (const label of ['Fluent', 'Material 3', '浅色', '深色']) {
-        const count = await page.getByRole('button', { name: label }).count()
-        if (count !== 1) throw new Error(`按钮「${label}」应恰好 1 个，实际 ${count} 个`)
-      }
-    })
+    await appearanceSuite(page, report)
+    await i18nSuite(page, report)
 
-    const collected = []
-
-    for (const combo of COMBOS) {
-      report.section(`${combo.theme} · ${combo.scheme}`)
-      await report.check(`切换到 ${combo.theme} · ${combo.scheme}（真实点击）`, async () => {
-        await selectCombo(page, combo)
-        const m = await settledMetrics(page)
-        collected.push({ ...combo, m })
-        report.note(`属性 data-theme=${m.theme} data-scheme=${m.scheme}`)
-        report.note(
-          `正文对比度 ${m.bodyContrast}:1 ｜ 卡片圆角 ${m.cardRadius} ｜ 徽章圆角 ${m.chipRadius}`,
-        )
-        report.note(
-          `标题字距 ${m.headingTracking} ｜ 正文行高 ${m.paragraphLeading} ｜ 面板模糊 ${m.cardBlur} ｜ 描边 ${m.cardBorderColor}`,
-        )
-      })
-      await report.shot(`${combo.theme} · ${combo.scheme} 整页`)
-    }
-
-    await report.check('1. 四种组合的正文对比度都达到 WCAG AA（≥ 4.5:1）', async () => {
-      // 先确认真的采到 4 组数据，否则断言会因为数组为空而空过——那是假通过。
-      if (collected.length !== COMBOS.length) {
-        throw new Error(`只采到 ${collected.length} 组数据，期望 ${COMBOS.length} 组，无法判断对比度`)
-      }
-      const bad = collected.filter((entry) => entry.m.bodyContrast < 4.5)
-      if (bad.length > 0) {
-        throw new Error(bad.map((e) => `${e.theme}·${e.scheme} 仅 ${e.m.bodyContrast}:1`).join('；'))
-      }
-      report.note(collected.map((e) => `${e.theme}·${e.scheme}=${e.m.bodyContrast}`).join('  '))
-    })
-
-    await report.check('2. 所有组合的页面底色互不相同（明暗与主题都真的生效）', async () => {
-      const backgrounds = new Set(collected.map((entry) => entry.m.pageBg))
-      if (backgrounds.size !== COMBOS.length) {
-        throw new Error(`期望 ${COMBOS.length} 种底色，实际 ${backgrounds.size} 种`)
-      }
-      report.note([...backgrounds].join('  |  '))
-    })
-
-    await report.check('3. 两套主题的形状语言确实不同（圆角/徽章/模糊/字距/行高）', async () => {
-      const fluent = collected.find((entry) => entry.themeId === 'fluent')
-      const material = collected.find((entry) => entry.themeId === 'material')
-      const fields = ['cardRadius', 'chipRadius', 'cardBlur', 'headingTracking', 'paragraphLeading']
-      const unchanged = fields.filter((field) => fluent.m[field] === material.m[field])
-      if (unchanged.length > 0) {
-        throw new Error(`这些形状/排版字段在两套主题间没有区别：${unchanged.join(', ')}`)
-      }
-      report.note(fields.map((f) => `${f}: ${fluent.m[f]} → ${material.m[f]}`).join('  ｜  '))
-    })
-
-    await report.check('4. 四种组合共用同一套 DOM（一套组件服务所有外观）', async () => {
-      const lengths = []
-      for (const combo of COMBOS) {
-        await selectCombo(page, combo)
-        await page.waitForTimeout(120)
-        lengths.push(await structureFingerprint(page))
-      }
-      if (new Set(lengths).size !== 1) {
-        throw new Error(`DOM 结构指纹不一致：${lengths.join(', ')}`)
-      }
-      report.note(`四种组合 DOM 指纹一致，长度 ${lengths[0]}`)
-    })
-
-    await report.check('5. 刷新后主题与明暗都保持（两个维度各自持久化）', async () => {
-      await selectCombo(page, COMBOS[3])
-      await page.reload({ waitUntil: 'load' })
-      await page.waitForSelector('article', { timeout: 15000 })
-      const after = await settledMetrics(page)
-      if (after.theme !== COMBOS[3].themeId || after.scheme !== COMBOS[3].schemeId) {
-        throw new Error(`刷新后期望 ${COMBOS[3].themeId}/${COMBOS[3].schemeId}，实际 ${after.theme}/${after.scheme}`)
-      }
-    })
-
-    await report.check('6. 整个过程中控制台没有任何报错', async () => {
+    await report.check('整个过程中控制台没有任何报错', async () => {
       if (consoleErrors.length > 0) {
         throw new Error(`控制台报错 ${consoleErrors.length} 条：${consoleErrors.join(' | ')}`)
       }

@@ -11,7 +11,7 @@
 
   --color-fg: oklch(24% 0.03 220);
   --color-fg-muted: oklch(47% 0.035 220);
-  --color-fg-subtle: oklch(62% 0.03 220);
+  --color-fg-subtle: oklch(47% 0.032 220);
 
   --color-accent: oklch(56% 0.13 205);
   --color-accent-2: oklch(54% 0.14 265);
@@ -47,7 +47,7 @@
 
   --color-fg: oklch(96% 0.008 215);
   --color-fg-muted: oklch(80% 0.014 215);
-  --color-fg-subtle: oklch(66% 0.016 215);
+  --color-fg-subtle: oklch(72% 0.018 215);
 
   --color-accent: oklch(80% 0.11 200);
   --color-accent-2: oklch(78% 0.12 265);

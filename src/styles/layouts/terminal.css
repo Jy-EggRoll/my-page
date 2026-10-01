@@ -189,6 +189,10 @@
   [data-layout='terminal'] .rail-nav {
     display: none;
   }
+  [data-layout='terminal'] .hero-headline {
+    /* 等宽字体的中文回退比 1em 更宽，360px 下 1.375rem 会让标题折出孤立单字 */
+    font-size: clamp(1.125rem, 5vw, 1.75rem);
+  }
   [data-layout='terminal'] .appearance-bar {
     flex-direction: row;
     flex-wrap: nowrap;

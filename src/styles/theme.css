@@ -19,7 +19,7 @@
   /* 文本层级 */
   --color-fg: oklch(24% 0.012 255);
   --color-fg-muted: oklch(48% 0.014 255);
-  --color-fg-subtle: oklch(64% 0.012 255);
+  --color-fg-subtle: oklch(47% 0.014 255);
 
   /* 强调色：主色 + 两个辅助色，供渐变与板块着色使用，让每个主题不止一个色调 */
   --color-accent: oklch(52% 0.176 262);

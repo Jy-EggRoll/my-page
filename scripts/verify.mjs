@@ -153,6 +153,23 @@ async function metrics(page) {
       accentBg: accentLink ? getComputedStyle(accentLink).backgroundColor : '(未找到)',
       headingTracking: headingStyle ? headingStyle.letterSpacing : '(无标题)',
       paragraphLeading: paragraphStyle ? paragraphStyle.lineHeight : '(无段落)',
+      // 次要文字的对比度。此前只测了正文色，导致浅色主题下次要文字成片不达标
+      // （独立复核实测 106 处低于 AA）却没被这套断言发现。
+      subtleSamples: ['.entry-meta', '.entry-subtitle', '.section-label', '.site-footer', '.notice']
+        .map((selector) => {
+          const el = document.querySelector(selector)
+          if (!el) return null
+          return {
+            selector,
+            contrast: Number(
+              contrast(
+                toRgb(getComputedStyle(el).color),
+                toRgb(rootStyle.backgroundColor),
+              ).toFixed(2),
+            ),
+          }
+        })
+        .filter((sample) => sample !== null),
     }
   })
 }
@@ -267,6 +284,22 @@ async function appearanceSuite(page, report) {
       throw new Error(`期望 ${COMBOS.length} 种底色，实际 ${backgrounds.size} 种`)
     }
     report.note([...backgrounds].join('  |  '))
+  })
+
+  await report.check('次要文字（元信息/副标题/页脚/提示条）也达到 WCAG AA（4.5:1）', async () => {
+    if (collected.length !== COMBOS.length) {
+      throw new Error(`只采到 ${collected.length} 组数据，无法判断次要文字对比度`)
+    }
+    const bad = collected.flatMap((entry) =>
+      entry.m.subtleSamples
+        .filter((sample) => sample.contrast < 4.5)
+        .map((sample) => `${entry.theme}·${entry.scheme} ${sample.selector}=${sample.contrast}:1`),
+    )
+    if (bad.length > 0) {
+      throw new Error(`次要文字对比度不足 ${bad.length} 处：${bad.slice(0, 6).join('；')}`)
+    }
+    const total = collected.reduce((sum, entry) => sum + entry.m.subtleSamples.length, 0)
+    report.note(`共检查 ${total} 处次要文字，全部 ≥ 4.5:1`)
   })
 
   await report.check('两套主题的形状语言确实不同（圆角/字距/行高/模糊）', async () => {
@@ -595,6 +628,7 @@ async function layoutSuite(page, report) {
   const VIEWPORTS = [
     { name: '桌面 1280', width: 1280, height: 900 },
     { name: '窄屏 390', width: 390, height: 844 },
+    { name: '窄屏 360', width: 360, height: 800 },
   ]
 
   for (const viewport of VIEWPORTS) {

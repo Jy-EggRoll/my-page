@@ -81,9 +81,14 @@
   transition: opacity var(--default-transition-duration) var(--ease-standard);
 }
 .btn-primary {
-  /* 底色仍用令牌（可测、随主题变），渐变只作叠加，不改变 background-color */
+  /* 底色仍用令牌（可测、随主题变）；渐变的尾端向主色回混，
+     避免浅色主题下按钮文字落在较浅的辅助色上而对比度不足（实测玻璃浅色曾只有 4.17:1） */
   background-color: var(--color-accent);
-  background-image: linear-gradient(100deg, var(--color-accent), var(--color-accent-2));
+  background-image: linear-gradient(
+    100deg,
+    var(--color-accent),
+    color-mix(in oklab, var(--color-accent-2) 55%, var(--color-accent))
+  );
   color: var(--color-accent-fg);
 }
 .btn-primary:hover {
@@ -329,7 +334,8 @@
   border-left-color: color-mix(in oklab, var(--section-color) 40%, var(--color-border));
 }
 
-/* 标签芯片：底色与文字都取自所在板块的色相 */
+/* 标签芯片：底色与文字都取自所在板块的色相；文字向正文色混合的比例要够，
+   否则浅色主题下会低于 AA（实测色相色 75% 时玻璃浅色只有 4.46:1） */
 .entry-chips {
   display: flex;
   flex-wrap: wrap;
@@ -341,7 +347,7 @@
   font-size: 0.75rem;
   font-weight: 500;
   background: color-mix(in oklab, var(--section-color, var(--color-accent)) 18%, transparent);
-  color: color-mix(in oklab, var(--section-color, var(--color-accent)) 75%, var(--color-fg));
+  color: color-mix(in oklab, var(--section-color, var(--color-accent)) 58%, var(--color-fg));
 }
 
 /* ---------- 章节强弱：核心经历与作品给更大版面权重 ---------- */
@@ -378,6 +384,8 @@
     flex-wrap: nowrap;
     overflow-x: auto;
     scrollbar-width: none;
+    /* 右侧渐隐：提示还有内容可以横向滑动（原先只有被裁的半个字母当提示，很难发现） */
+    mask-image: linear-gradient(to right, #000 calc(100% - 1rem), transparent 100%);
   }
   .appearance-bar::-webkit-scrollbar {
     display: none;
@@ -421,6 +429,19 @@
   .entry-item--grid .entry-title a {
     display: inline-block;
     padding: 0.25rem 0;
+  }
+  /* 这几处此前仍是 12px，统一提到 13px */
+  .notice,
+  .site-footer,
+  .section-path,
+  .contact-handle,
+  figcaption {
+    font-size: 0.8125rem;
+  }
+  /* 首屏水印在窄屏缩小并降淡，避免与标题叠得太满 */
+  .hero-mark {
+    font-size: clamp(2rem, 16vw, 3.5rem);
+    opacity: 0.22;
   }
 }
 

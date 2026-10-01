@@ -33,11 +33,17 @@ export interface ResumeSection {
 }
 
 export interface ResumeContent {
+  /**
+   * 简历 basics.headline。原字段是「一句话、用空白分成两个分句」，
+   * 所以这里按行存：两行是同一个声明的两个分句，不是标题 + 副标题。
+   */
+  headline: readonly string[];
   summary: readonly string[];
   sections: readonly ResumeSection[];
 }
 
 const ZH: ResumeContent = {
+  headline: ['将工程美学融入技术细节', '以技术细节解决效率痛点'],
   summary: [
     '北京邮电大学计算机学院数据科学与大数据技术专业本科在读。',
     '独立维护多个开源运维类项目，能力覆盖跨平台系统底层、自动化运维、工程化开发与 AI 工具落地，坚持以代码化手段替代人工重复操作。',
@@ -176,6 +182,10 @@ const ZH: ResumeContent = {
 };
 
 const EN: ResumeContent = {
+  headline: [
+    'Engineering aesthetics, expressed in technical detail',
+    'Solving efficiency pain points through technical detail',
+  ],
   summary: [
     'Undergraduate in Data Science and Big Data Technology at the School of Computer Science, Beijing University of Posts and Telecommunications.',
     'Maintains several open-source operations-tooling projects independently, covering cross-platform system internals, automation, engineering practice and applied AI tooling — with a preference for replacing repetitive manual work with code.',

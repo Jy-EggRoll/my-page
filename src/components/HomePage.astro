@@ -30,8 +30,14 @@ const year = new Date().getFullYear();
     </p>
 
     <section class="mt-10">
-      <h1 class="text-4xl font-bold tracking-heading sm:text-5xl">{t.heroTitle}</h1>
-      <p class="mt-4 max-w-2xl text-lg leading-body text-fg-muted">{t.heroSubtitle}</p>
+      <!-- headline 是「一句话的两个分句」，两行同级呈现，不是标题加副标题 -->
+      <h1 class="text-4xl font-bold tracking-heading sm:text-5xl">
+        {
+          resume.headline.map((line) => (
+            <span class="block">{line}</span>
+          ))
+        }
+      </h1>
       <div class="mt-6 flex flex-wrap gap-3">
         <a
           href={SITE_LINKS.github}

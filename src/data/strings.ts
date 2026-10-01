@@ -10,8 +10,6 @@ export interface SiteStrings {
   pageTitle: string;
   pageDescription: string;
   notice: string;
-  heroTitle: string;
-  heroSubtitle: string;
   linkGithub: string;
   linkBlog: string;
 
@@ -30,8 +28,6 @@ export const STRINGS: Record<Locale, SiteStrings> = {
     pageTitle: '蛋卷儿 · 个人主页',
     pageDescription: '将工程美学融入技术细节 —— 个人主页与开源项目索引。',
     notice: '原型站点：4 套主题与中英双语均可实时切换，内容与正式文案仍在迭代。',
-    heroTitle: '将工程美学融入技术细节',
-    heroSubtitle: '以技术细节解决效率痛点。专注实用工具与运维开发，维护多个开源项目。',
     linkGithub: 'GitHub',
     linkBlog: '博客',
 
@@ -54,9 +50,6 @@ export const STRINGS: Record<Locale, SiteStrings> = {
       'Engineering aesthetics in technical detail — personal site and open-source index.',
     notice:
       'Prototype: four themes and two languages switch live. Content and final copy are still being iterated on.',
-    heroTitle: 'Engineering aesthetics, expressed in technical detail',
-    heroSubtitle:
-      'Solving efficiency pain points through technical detail. Focused on practical tooling and operations development, maintaining several open-source projects.',
     linkGithub: 'GitHub',
     linkBlog: 'Blog',
 

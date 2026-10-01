@@ -81,6 +81,10 @@ const year = new Date().getFullYear();
     <Contact locale={locale} />
     <StatsEmbed locale={locale} />
 
-    <footer class="site-footer">© {year} {t.brand} · {t.footer}</footer>
+    <!-- 左右两栏：左「© 年份 品牌」，右「构建说明」；窄屏由 flex-wrap 自动堆叠 -->
+    <footer class="site-footer">
+      <span class="site-footer-credit">© {year} {t.brand}</span>
+      <span class="site-footer-note">{t.footer}</span>
+    </footer>
   </div>
 </BaseLayout>

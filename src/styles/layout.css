@@ -75,10 +75,15 @@
 .btn-primary,
 .btn-secondary {
   border-radius: var(--radius-control);
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 1.125rem;
   font-size: 0.875rem;
   font-weight: 500;
-  transition: opacity var(--default-transition-duration) var(--ease-standard);
+  transition:
+    transform var(--default-transition-duration) var(--ease-standard),
+    box-shadow var(--default-transition-duration) var(--ease-standard),
+    opacity var(--default-transition-duration) var(--ease-standard),
+    border-color var(--default-transition-duration) var(--ease-standard),
+    color var(--default-transition-duration) var(--ease-standard);
 }
 .btn-primary {
   /* 底色仍用令牌（可测、随主题变）；渐变的尾端向主色回混，
@@ -90,13 +95,33 @@
     color-mix(in oklab, var(--color-accent-2) 55%, var(--color-accent))
   );
   color: var(--color-accent-fg);
+  /* 阴影色也从主色派生，4 套主题各得其所，不必为每个主题写一条 */
+  box-shadow:
+    0 1px 2px oklch(from var(--color-accent) l c h / 0.22),
+    0 5px 14px oklch(from var(--color-accent) l c h / 0.14);
 }
 .btn-primary:hover {
-  opacity: 0.9;
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow:
+    0 2px 4px oklch(from var(--color-accent) l c h / 0.26),
+    0 9px 20px oklch(from var(--color-accent) l c h / 0.2);
 }
 .btn-secondary {
   border: 1px solid var(--color-border);
   background: var(--color-surface);
+}
+.btn-secondary:hover {
+  border-color: color-mix(in oklab, var(--color-accent) 45%, var(--color-border));
+  color: var(--color-accent);
+  transform: translateY(-1px);
+}
+/* 抬起动效对前庭敏感的人不友好，跟随系统的减动效偏好关掉（与终端版式光标同一处理） */
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary:hover,
+  .btn-secondary:hover {
+    transform: none;
+  }
 }
 
 /* ---------- 章节与条目 ---------- */
@@ -572,11 +597,39 @@
   }
 }
 
-/* ---------- 页脚 ---------- */
+/* ---------- 页脚 ----------
+   次要文字对比度采样点之一（scripts/verify.mjs 的 subtleSamples 里有 .site-footer），
+   所以这里只从 --color-fg-subtle 提到 --color-fg-muted（更亮的一档），字号也从
+   0.75rem 提到 0.8125rem；不要为了让页脚「更淡」而往回压。 */
 .site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.375rem 1.5rem;
+  position: relative;
   margin-top: 3.5rem;
-  border-top: 1px solid var(--color-border);
+  /* 分隔线改用下面的渐隐细线：仍然把页脚与正文分开，但比一条实线含蓄 */
+  border-top: 0;
   padding-top: 1.5rem;
-  font-size: 0.75rem;
-  color: var(--color-fg-subtle);
+  font-size: 0.8125rem;
+  color: var(--color-fg-muted);
+}
+/* 渐隐细线是伪元素，不进 DOM —— 回归脚本的 DOM 指纹断言要求各外观/语言结构一致 */
+.site-footer::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background-image: linear-gradient(
+    90deg,
+    var(--color-border),
+    color-mix(in oklab, var(--color-border) 55%, transparent) 38%,
+    transparent
+  );
+}
+/* 左侧「© 年份 品牌」用正文色，右侧构建说明留在 muted：同一条里读出主次 */
+.site-footer-credit {
+  font-weight: 500;
+  color: var(--color-fg);
 }

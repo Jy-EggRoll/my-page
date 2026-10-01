@@ -49,7 +49,13 @@ for (const group of APPEARANCE) {
       })();
     </script>
   </head>
-  <body class="bg-bg text-fg antialiased transition-colors ease-standard">
+  <body class="min-h-screen text-fg antialiased transition-colors ease-standard">
+    <!-- 装饰性背景层：内容由各主题通过 --backdrop-layer 提供，其余主题为 none -->
+    <div
+      aria-hidden="true"
+      class="pointer-events-none fixed inset-0 -z-10 [background-image:var(--backdrop-layer)] [background-repeat:no-repeat]"
+    >
+    </div>
     <slot />
   </body>
 </html>

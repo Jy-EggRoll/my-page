@@ -1,0 +1,62 @@
+/*
+ * Glass：玻璃拟态。
+ * 表面高度透明 + 强背景模糊，配细亮描边；依赖 --backdrop-layer 提供可透的底色渐变 ——
+ * 纯色底上的毛玻璃是看不出效果的。
+ */
+[data-theme='glass'] {
+  --color-bg: oklch(96% 0.018 205);
+  --color-surface: oklch(100% 0 0 / 0.55);
+  --color-surface-raised: oklch(100% 0 0 / 0.72);
+  --color-border: oklch(88% 0.03 205);
+
+  --color-fg: oklch(24% 0.03 220);
+  --color-fg-muted: oklch(47% 0.035 220);
+  --color-fg-subtle: oklch(62% 0.03 220);
+
+  --color-accent: oklch(56% 0.13 205);
+  --color-accent-fg: oklch(100% 0 0);
+  --color-accent-soft: oklch(93% 0.05 205);
+  --color-ring: oklch(56% 0.13 205);
+
+  --radius-card: 1.25rem;
+  --radius-control: 0.75rem;
+  --radius-chip: 9999px;
+
+  --blur-panel: 28px;
+  --backdrop-layer:
+    radial-gradient(55rem 38rem at 8% -12%, oklch(86% 0.09 210 / 0.7), transparent 62%),
+    radial-gradient(48rem 34rem at 95% 4%, oklch(88% 0.08 185 / 0.6), transparent 60%),
+    radial-gradient(42rem 30rem at 55% 105%, oklch(90% 0.07 250 / 0.55), transparent 65%);
+
+  /* 玻璃靠大范围柔和投影浮起，不用硬阴影 */
+  --elevation-card: 0 1px 2px oklch(30% 0.04 220 / 0.06), 0 12px 32px oklch(30% 0.04 220 / 0.1);
+  --elevation-raised: 0 2px 6px oklch(30% 0.04 220 / 0.08), 0 24px 56px oklch(30% 0.04 220 / 0.14);
+
+  --tracking-heading: -0.01em;
+  --leading-body: 1.6;
+  --default-transition-duration: 200ms;
+}
+
+[data-theme='glass'][data-scheme='dark'] {
+  --color-bg: oklch(22% 0.02 215);
+  --color-surface: oklch(34% 0.025 215 / 0.4);
+  --color-surface-raised: oklch(40% 0.03 215 / 0.55);
+  --color-border: oklch(100% 0 0 / 0.16);
+
+  --color-fg: oklch(96% 0.008 215);
+  --color-fg-muted: oklch(80% 0.014 215);
+  --color-fg-subtle: oklch(66% 0.016 215);
+
+  --color-accent: oklch(80% 0.11 200);
+  --color-accent-fg: oklch(20% 0.03 215);
+  --color-accent-soft: oklch(33% 0.05 205);
+  --color-ring: oklch(80% 0.11 200);
+
+  --backdrop-layer:
+    radial-gradient(55rem 38rem at 8% -12%, oklch(45% 0.1 215 / 0.75), transparent 62%),
+    radial-gradient(48rem 34rem at 95% 4%, oklch(42% 0.09 185 / 0.65), transparent 60%),
+    radial-gradient(42rem 30rem at 55% 105%, oklch(40% 0.08 260 / 0.6), transparent 65%);
+
+  --elevation-card: 0 1px 2px oklch(0% 0 0 / 0.3), 0 12px 32px oklch(0% 0 0 / 0.3);
+  --elevation-raised: 0 2px 6px oklch(0% 0 0 / 0.34), 0 24px 56px oklch(0% 0 0 / 0.4);
+}

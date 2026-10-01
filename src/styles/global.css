@@ -2,3 +2,5 @@
 @import './theme.css';
 @import './themes/fluent.css';
 @import './themes/material.css';
+@import './themes/glass.css';
+@import './themes/aurora.css';

@@ -36,13 +36,27 @@ const ARTIFACTS_ROOT = join(REPO_ROOT, '.verify')
 
 const TITLE = 'Phase 2 外观回归：主题 × 明暗 四组合'
 
-/** 四种外观组合。按钮文案来自 src/config/appearance.ts，改配置时这里要同步。 */
-const COMBOS = [
-  { theme: 'Fluent', themeId: 'fluent', scheme: '浅色', schemeId: 'light' },
-  { theme: 'Fluent', themeId: 'fluent', scheme: '深色', schemeId: 'dark' },
-  { theme: 'Material 3', themeId: 'material', scheme: '浅色', schemeId: 'light' },
-  { theme: 'Material 3', themeId: 'material', scheme: '深色', schemeId: 'dark' },
+/** 按钮文案来自 src/config/appearance.ts，改配置时这两个清单要同步。 */
+const THEME_OPTIONS = [
+  { label: 'Fluent', id: 'fluent' },
+  { label: 'Material 3', id: 'material' },
+  { label: 'Glass', id: 'glass' },
+  { label: 'Aurora', id: 'aurora' },
 ]
+const SCHEME_OPTIONS = [
+  { label: '浅色', id: 'light' },
+  { label: '深色', id: 'dark' },
+]
+
+/** 全组合矩阵：主题 × 明暗。 */
+const COMBOS = THEME_OPTIONS.flatMap((theme) =>
+  SCHEME_OPTIONS.map((scheme) => ({
+    theme: theme.label,
+    themeId: theme.id,
+    scheme: scheme.label,
+    schemeId: scheme.id,
+  })),
+)
 
 /**
  * 加载 skill 里的一个 lib 模块。
@@ -103,7 +117,8 @@ async function metrics(page) {
       return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05)
     }
 
-    const body = getComputedStyle(document.body)
+    const rootStyle = getComputedStyle(document.documentElement)
+    const bodyStyle = getComputedStyle(document.body)
     const card = document.querySelector('article')
     const cardStyle = card ? getComputedStyle(card) : null
     const chip = document.querySelector('section span')
@@ -116,9 +131,13 @@ async function metrics(page) {
     return {
       theme: document.documentElement.getAttribute('data-theme'),
       scheme: document.documentElement.getAttribute('data-scheme'),
-      bodyBg: body.backgroundColor,
-      bodyColor: body.color,
-      bodyContrast: Number(contrast(toRgb(body.color), toRgb(body.backgroundColor)).toFixed(2)),
+      // 页面底色画在 html 上（这样 -z-10 的装饰背景层才可见），body 是透明的，
+      // 所以底色必须从 documentElement 读，读 body 会拿到 rgba(0,0,0,0)。
+      pageBg: rootStyle.backgroundColor,
+      textColor: bodyStyle.color,
+      bodyContrast: Number(
+        contrast(toRgb(bodyStyle.color), toRgb(rootStyle.backgroundColor)).toFixed(2),
+      ),
       cardRadius: cardStyle ? cardStyle.borderRadius : '(无卡片)',
       cardShadow: cardStyle ? cardStyle.boxShadow : '(无卡片)',
       cardBlur: cardStyle
@@ -133,19 +152,33 @@ async function metrics(page) {
 }
 
 /**
- * 等计算样式稳定下来再取值。
- * body 有 transition-colors、卡片有 transition-shadow（半径与模糊没有过渡），
- * 点击后立刻读会读到过渡中的中间值——那是测量时机问题，不是外观没切换。
+ * 等外观切换的过渡真正结束。
+ *
+ * 这里刻意不用「连续两次读数相同就算稳定」——点击之后过渡尚未开始的那一瞬间，
+ * 两次读数是天然相同的（都是旧值），于是会立刻返回旧主题的颜色。颜色是渐变的，
+ * 这个判据必然出现竞态。改为盯 getAnimations()：先确认过渡已开始，再等它跑完。
  */
+async function waitForTransitionsToSettle(page) {
+  await page
+    .waitForFunction(() => document.getAnimations().some((a) => a.playState === 'running'), undefined, {
+      timeout: 1000,
+    })
+    .catch(() => {
+      /* 本次切换没有产生过渡（例如该属性根本没变），直接继续 */
+    })
+  await page
+    .waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running'), undefined, {
+      timeout: 3000,
+    })
+    .catch(() => {
+      /* 过渡异常地长，按超时继续，下面的读数会如实反映现场 */
+    })
+}
+
+/** 等过渡结束后取值。 */
 async function settledMetrics(page) {
-  let previous
-  for (let attempt = 0; attempt < 40; attempt += 1) {
-    const current = await metrics(page)
-    if (previous !== undefined && JSON.stringify(previous) === JSON.stringify(current)) return current
-    previous = current
-    await page.waitForTimeout(50)
-  }
-  throw new Error('计算样式在 2 秒内没有稳定，可能过渡一直没结束')
+  await waitForTransitionsToSettle(page)
+  return metrics(page)
 }
 
 /** DOM 结构指纹：去掉会随交互变化的 aria-pressed，只留标签与类名。 */
@@ -231,10 +264,10 @@ async function main() {
       report.note(collected.map((e) => `${e.theme}·${e.scheme}=${e.m.bodyContrast}`).join('  '))
     })
 
-    await report.check('2. 四种组合的背景色互不相同（明暗与主题都真的生效）', async () => {
-      const backgrounds = new Set(collected.map((entry) => entry.m.bodyBg))
+    await report.check('2. 所有组合的页面底色互不相同（明暗与主题都真的生效）', async () => {
+      const backgrounds = new Set(collected.map((entry) => entry.m.pageBg))
       if (backgrounds.size !== COMBOS.length) {
-        throw new Error(`期望 ${COMBOS.length} 种背景色，实际 ${backgrounds.size} 种`)
+        throw new Error(`期望 ${COMBOS.length} 种底色，实际 ${backgrounds.size} 种`)
       }
       report.note([...backgrounds].join('  |  '))
     })

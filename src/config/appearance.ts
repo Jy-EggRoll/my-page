@@ -31,6 +31,8 @@ const THEME: AppearanceGroup = {
   options: [
     { id: 'fluent', label: 'Fluent', description: '亚克力材质，半透明表面与分层阴影' },
     { id: 'material', label: 'Material 3', description: '色调表面，大圆角与实心阴影' },
+    { id: 'glass', label: 'Glass', description: '玻璃拟态，强背景模糊与细亮描边' },
+    { id: 'aurora', label: 'Aurora', description: '极光，深色底上的多色光晕与描边发光' },
   ],
 };
 

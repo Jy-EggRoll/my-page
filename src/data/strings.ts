@@ -20,6 +20,8 @@ export interface SiteStrings {
 
   footer: string;
   langSwitcherLabel: string;
+  /** 窄屏下收起「外观」控件的按钮文案 */
+  appearanceLabel: string;
   /** 终端版式左侧路径导航的 aria-label */
   railNavLabel: string;
 }
@@ -44,6 +46,7 @@ export const STRINGS: Record<Locale, SiteStrings> = {
 
     footer: '由 Astro 与 Tailwind CSS 构建',
     langSwitcherLabel: '切换语言',
+    appearanceLabel: '外观',
     railNavLabel: '页面内导航',
   },
   en: {
@@ -67,6 +70,7 @@ export const STRINGS: Record<Locale, SiteStrings> = {
 
     footer: 'Built with Astro and Tailwind CSS',
     langSwitcherLabel: 'Switch language',
+    appearanceLabel: 'Appearance',
     railNavLabel: 'On this page',
   },
 };

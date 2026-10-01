@@ -243,6 +243,13 @@
   background: var(--color-surface-raised);
   padding: 0.25rem;
 }
+/* 桌面端控件条常开、摘要隐藏；若在窄屏收起过再回到宽屏，摘要会显出来兜底 */
+.appearance-collapse > summary {
+  display: none;
+}
+.appearance-collapse:not([open]) > summary {
+  display: block;
+}
 .appearance-group {
   display: flex;
   align-items: center;
@@ -378,26 +385,65 @@
     padding: 0.5rem 0;
     font-size: 0.9375rem;
   }
-  .appearance-bar {
-    flex: 1;
-    min-width: 0;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
-    /* 右侧渐隐：提示还有内容可以横向滑动（原先只有被裁的半个字母当提示，很难发现） */
-    mask-image: linear-gradient(to right, #000 calc(100% - 1rem), transparent 100%);
+  /* 窄屏把控件条收进一个「外观」按钮，点开是浮层面板：四个维度一次可达，
+     不必再横向滑动去「找」明暗或语言开关（原先需滑 394px、7 项在屏外）。 */
+  .appearance-collapse {
+    margin-left: auto;
   }
-  .appearance-bar::-webkit-scrollbar {
+  .appearance-collapse > summary {
+    display: block;
+    cursor: pointer;
+    list-style: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-raised);
+    padding: 0.5rem 0.875rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-fg-muted);
+  }
+  .appearance-collapse > summary::-webkit-details-marker {
+    display: none;
+  }
+  .appearance-collapse > summary::after {
+    content: '';
+    display: inline-block;
+    margin-left: 0.375rem;
+    vertical-align: middle;
+    border: 0.25rem solid transparent;
+    border-top-color: currentColor;
+  }
+  .appearance-collapse[open] > summary {
+    color: var(--color-fg);
+  }
+  .appearance-bar {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 1.25rem;
+    z-index: 20;
+    flex-direction: column;
+    align-items: stretch;
+    width: min(20rem, calc(100vw - 2.5rem));
+    border-radius: var(--radius-card);
+    padding: 0.5rem;
+    box-shadow: var(--elevation-raised);
+  }
+  /* 必须显式隐藏：面板是绝对定位的，脱离了浏览器对关闭态 <details> 的隐藏机制，
+     否则收起时它会一直浮在页面上（实测确实如此） */
+  .appearance-collapse:not([open]) > .appearance-bar {
     display: none;
   }
   .appearance-group {
-    flex: none;
-    padding: 0 0.25rem;
+    flex-wrap: wrap;
+    padding: 0.25rem 0;
+  }
+  .appearance-group + .appearance-group {
+    border-left: 0;
+    border-top: 1px solid var(--color-border);
   }
   .appearance-option {
     padding: 0.5rem 0.75rem;
     font-size: 0.8125rem;
-    white-space: nowrap;
   }
   .rail-link {
     padding: 0.625rem;

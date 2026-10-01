@@ -10,15 +10,36 @@ interface Props {
 }
 
 const { locale } = Astro.props;
+const t = stringsFor(locale);
 ---
 
 <header class="site-header">
-  <a class="site-brand" href={getRelativeLocaleUrl(locale, '/')}>
-    {stringsFor(locale).brand}
-  </a>
-  <!-- 四个维度收进同一条控件条：主题 / 明暗 / 版式 / 语言 -->
-  <div class="appearance-bar">
-    <AppearanceSwitcher locale={locale} />
-    <LangSwitcher locale={locale} />
-  </div>
+  <a class="site-brand" href={getRelativeLocaleUrl(locale, '/')}>{t.brand}</a>
+
+  <!--
+    桌面端：摘要隐藏、控件条平铺成一行。
+    窄屏：收起成一个「外观」按钮，点开是浮层面板 —— 四个维度一次可达，
+    不再需要横向滑动去「找」明暗或语言开关。
+    默认带 open，保证无 JS 时桌面端也是展开的。
+  -->
+  <details class="appearance-collapse" open>
+    <summary class="appearance-summary">{t.appearanceLabel}</summary>
+    <div class="appearance-bar">
+      <AppearanceSwitcher locale={locale} />
+      <LangSwitcher locale={locale} />
+    </div>
+  </details>
 </header>
+
+<script>
+  // 让 <details> 的展开态跟随视口：宽屏常开、窄屏收起。
+  // 只改 open 属性，键盘与读屏仍走原生 details/summary 语义。
+  const wideQuery = window.matchMedia('(min-width: 40.0625rem)');
+  const syncCollapse = () => {
+    document.querySelectorAll<HTMLDetailsElement>('.appearance-collapse').forEach((element) => {
+      element.open = wideQuery.matches;
+    });
+  };
+  syncCollapse();
+  wideQuery.addEventListener('change', syncCollapse);
+</script>

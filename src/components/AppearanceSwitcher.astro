@@ -1,0 +1,75 @@
+---
+import { APPEARANCE } from '../config/appearance';
+---
+
+<div class="flex flex-wrap items-center gap-3">
+  {
+    APPEARANCE.map((group) => (
+      <div
+        class="flex items-center gap-1 rounded-pill border border-border bg-surface-raised p-1"
+        role="group"
+        aria-label={group.label}
+      >
+        {group.options.map((option) => (
+          <button
+            type="button"
+            data-appearance-group={group.id}
+            data-appearance-option={option.id}
+            title={option.description}
+            aria-pressed="false"
+            class="rounded-chip px-3 py-1 text-xs font-medium text-fg-muted transition-colors ease-standard hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-pressed:bg-accent aria-pressed:text-accent-fg"
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    ))
+  }
+</div>
+
+<script>
+  import { APPEARANCE } from '../config/appearance';
+
+  const OPTION_SELECTOR = '[data-appearance-option]';
+
+  function syncPressedState(): void {
+    for (const group of APPEARANCE) {
+      const current = document.documentElement.getAttribute(group.attribute);
+      document
+        .querySelectorAll<HTMLButtonElement>(
+          `[data-appearance-group="${group.id}"] ${OPTION_SELECTOR}`,
+        )
+        .forEach((button) => {
+          button.setAttribute('aria-pressed', String(button.dataset.appearanceOption === current));
+        });
+    }
+  }
+
+  function applyOption(group: (typeof APPEARANCE)[number], id: string): void {
+    document.documentElement.setAttribute(group.attribute, id);
+    try {
+      localStorage.setItem(group.storageKey, id);
+    } catch (error) {
+      /* 存不下只影响下次访问的默认值，本次切换照常生效 */
+    }
+    syncPressedState();
+  }
+
+  document.querySelectorAll<HTMLButtonElement>(OPTION_SELECTOR).forEach((button) => {
+    button.addEventListener('click', () => {
+      const group = APPEARANCE.find(
+        (candidate) => candidate.id === button.dataset.appearanceGroup,
+      );
+      const id = button.dataset.appearanceOption;
+      if (group !== undefined && id !== undefined) applyOption(group, id);
+    });
+  });
+
+  // 内联脚本通常已经写好属性；这里兜底处理脚本被阻止或属性缺失的情况。
+  for (const group of APPEARANCE) {
+    if (!document.documentElement.hasAttribute(group.attribute)) {
+      document.documentElement.setAttribute(group.attribute, group.defaultId);
+    }
+  }
+  syncPressedState();
+</script>

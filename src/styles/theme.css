@@ -2,11 +2,12 @@
  * L1 语义令牌层。
  *
  * 组件只消费这里的令牌，不允许出现具体色值或尺寸；
- * 各主题在 ./themes/*.css 里用 [data-theme] 重映射这批令牌，组件无需改动。
+ * 各主题在 ./themes/*.css 里用 [data-theme] / [data-theme][data-scheme] 重映射这批令牌，
+ * 组件无需改动。
  *
  * 用 `static` 修饰符是必须的：默认情况下 Tailwind v4 会把「没有被任何 utility 引用」
  * 的令牌摇树掉，那样主题覆盖就失去 :root 上的默认值兜底。static 强制全部输出。
- * 不要改成 `inline` —— inline 会把值直接内联进 utility，运行时切换主题会失效。
+ * 不要改成 `inline` —— inline 会把值直接内联进 utility，运行时切换外观会失效。
  */
 @theme static {
   /* 表面与描边 */
@@ -26,13 +27,20 @@
   --color-accent-soft: oklch(94% 0.036 262);
   --color-ring: oklch(52% 0.176 262);
 
-  /* 形状 */
+  /* 形状：徽章自成一档，是各主题气质差异最明显的形状之一（胶囊 vs 小圆角） */
   --radius-card: 1rem;
   --radius-control: 0.5rem;
+  --radius-chip: 9999px;
   --radius-pill: 9999px;
 
   /* 质感（blur-panel 同时驱动 blur-* 与 backdrop-blur-*） */
   --blur-panel: 0px;
+
+  /* 排版 */
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans CJK SC', sans-serif;
+  --font-mono: ui-monospace, 'Maple Mono NL NF CN', 'Cascadia Code', Menlo, monospace;
+  --tracking-heading: -0.01em;
+  --leading-body: 1.55;
 
   /* 动效：transition-* 的时长默认取自 --default-transition-duration，
      主题改这一个令牌就等于改全站过渡节奏，class 里不必再写 duration-* */
@@ -52,8 +60,11 @@
 }
 
 @layer base {
-  html {
-    /* 目前只有浅色方案，显式声明可避免浏览器对表单控件做自动暗化 */
+  :root {
     color-scheme: light;
+  }
+  /* 声明 color-scheme 让表单控件与滚动条跟随明暗，而不是被浏览器自动反色 */
+  :root[data-scheme='dark'] {
+    color-scheme: dark;
   }
 }

@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import ThemeSwitcher from '../components/ThemeSwitcher.astro';
+import AppearanceSwitcher from '../components/AppearanceSwitcher.astro';
 
 const skills = ['Go', 'TypeScript', 'Python', 'Cloudflare Workers', 'Docker', 'K8s'];
 
@@ -26,32 +26,34 @@ const projects = [
 ];
 ---
 
-<BaseLayout title="主题原型 · 蛋卷儿">
+<BaseLayout title="外观原型 · 蛋卷儿">
   <div class="mx-auto max-w-5xl px-6 py-10">
-    <header class="flex items-center justify-between gap-4">
-      <span class="text-sm font-semibold tracking-tight">蛋卷儿</span>
-      <ThemeSwitcher />
+    <header class="flex flex-wrap items-center justify-between gap-4">
+      <span class="text-sm font-semibold tracking-heading">蛋卷儿</span>
+      <AppearanceSwitcher />
     </header>
 
-    <p class="mt-8 rounded-control border border-border bg-accent-soft px-4 py-2 text-xs text-fg-muted">
-      Phase 2 主题原型：用于对比 Fluent 与 Material 3 两套令牌映射的实际效果。内容是占位，非最终文案。
+    <p
+      class="mt-8 rounded-control border border-border bg-accent-soft px-4 py-2 text-xs leading-body text-fg-muted"
+    >
+      Phase 2 外观原型：主题风格与明暗是两个独立维度，可任意组合。内容是占位，非最终文案。
     </p>
 
     <section class="mt-10">
-      <h1 class="text-4xl font-bold tracking-tight sm:text-5xl">将工程美学融入技术细节</h1>
-      <p class="mt-4 max-w-2xl text-lg text-fg-muted">
+      <h1 class="text-4xl font-bold tracking-heading sm:text-5xl">将工程美学融入技术细节</h1>
+      <p class="mt-4 max-w-2xl text-lg leading-body text-fg-muted">
         以技术细节解决效率痛点。专注实用工具与运维开发，维护多个开源项目。
       </p>
       <div class="mt-6 flex flex-wrap gap-3">
         <a
           href="https://github.com/Jy-EggRoll"
-          class="rounded-control bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-opacity duration-200 ease-standard hover:opacity-90"
+          class="rounded-control bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-opacity ease-standard hover:opacity-90"
         >
           GitHub
         </a>
         <a
           href="https://eggroll.pages.dev"
-          class="rounded-control border border-border bg-surface px-4 py-2 text-sm font-medium transition-colors duration-200 ease-standard hover:bg-surface-raised"
+          class="rounded-control border border-border bg-surface px-4 py-2 text-sm font-medium transition-colors ease-standard hover:bg-surface-raised"
         >
           博客
         </a>
@@ -61,7 +63,7 @@ const projects = [
     <section class="mt-10 flex flex-wrap gap-2">
       {
         skills.map((skill) => (
-          <span class="rounded-pill bg-accent-soft px-3 py-1 text-xs font-medium text-accent">
+          <span class="rounded-chip bg-accent-soft px-3 py-1 text-xs font-medium text-accent">
             {skill}
           </span>
         ))
@@ -72,17 +74,17 @@ const projects = [
       {
         projects.map((project) => (
           <article class="rounded-card border border-border bg-surface p-5 backdrop-blur-panel transition-shadow ease-standard [box-shadow:var(--elevation-card)] hover:[box-shadow:var(--elevation-raised)]">
-            <h2 class="text-base font-semibold">{project.name}</h2>
-            <p class="mt-2 text-sm text-fg-muted">{project.summary}</p>
-            <p class="mt-4 text-xs text-fg-subtle">{project.meta}</p>
+            <h2 class="font-mono text-base font-semibold tracking-heading">{project.name}</h2>
+            <p class="mt-2 text-sm leading-body text-fg-muted">{project.summary}</p>
+            <p class="mt-4 font-mono text-xs text-fg-subtle">{project.meta}</p>
             <p class="mt-1 text-xs font-medium text-accent">{project.highlight}</p>
           </article>
         ))
       }
     </section>
 
-    <footer class="mt-14 border-t border-border pt-6 text-xs text-fg-subtle">
-      原型页面 · 主题与内容均未定稿
+    <footer class="mt-14 border-t border-border pt-6 text-xs leading-body text-fg-subtle">
+      原型页面 · 外观与内容均未定稿
     </footer>
   </div>
 </BaseLayout>

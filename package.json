@@ -12,7 +12,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
-    "astro": "astro"
+    "astro": "astro",
+    "verify:appearance": "node scripts/verify-appearance.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

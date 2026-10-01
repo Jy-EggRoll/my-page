@@ -21,3 +21,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# 外观回归现场产物（本机验证，见 scripts/verify-appearance.mjs）
+.verify/

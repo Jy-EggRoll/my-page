@@ -1,0 +1,225 @@
+/*
+ * 版式层（外观的第三个维度）。
+ *
+ * 与主题层一样，这一层是**允许出现排版字面量**的地方：字号、间距、栅格、行高这类
+ * 与配色无关的常量集中在这里。但**颜色、圆角、阴影、模糊一律仍走语义令牌**，
+ * 这样 4 套主题 × 明暗都能成立 —— 这是「主题只换令牌、DOM 与版式不动」的根基。
+ *
+ * 整页只有一份 DOM（见 components/HomePage.astro 与 ResumeSection.astro），
+ * 三种编排由 [data-layout] 的 CSS 切换：默认值即编辑式，另两套在 layouts/ 下。
+ * 这一层不带 @layer，因此会覆盖 Tailwind 的原子类（原子类在 utilities 层里）。
+ */
+
+/* ---------- 外壳 ---------- */
+.layout-shell {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 3rem;
+}
+
+/* 侧栏导航只有终端版式才显示 */
+.rail-nav {
+  display: none;
+}
+
+/* ---------- 书眉（序号 / 标签 / 路径） ---------- */
+.section-masthead {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.section-ordinal {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-fg-subtle);
+}
+.section-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-fg-subtle);
+}
+.section-path {
+  display: none; /* 只有终端版式展示路径标签 */
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-fg-subtle);
+}
+
+/* ---------- 提示条 ---------- */
+.notice {
+  margin-top: 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-accent-soft);
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  line-height: var(--leading-body);
+  color: var(--color-fg-muted);
+}
+
+/* ---------- 首屏 ---------- */
+/* 字号与显示行高属于版式；字距归主题（--tracking-heading），主题换了它必须跟着变 */
+.hero-headline {
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  font-weight: 700;
+  letter-spacing: var(--tracking-heading);
+  line-height: 1.06;
+}
+.hero-line {
+  display: block;
+}
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+.btn-primary,
+.btn-secondary {
+  border-radius: var(--radius-control);
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: opacity var(--default-transition-duration) var(--ease-standard);
+}
+.btn-primary {
+  background: var(--color-accent);
+  color: var(--color-accent-fg);
+}
+.btn-primary:hover {
+  opacity: 0.9;
+}
+.btn-secondary {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+/* ---------- 章节与条目 ---------- */
+.section-shell {
+  margin-top: 3rem;
+}
+.prose {
+  color: var(--color-fg-muted);
+  line-height: var(--leading-body);
+}
+.prose + .prose {
+  margin-top: 0.75rem;
+}
+
+.entry-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: var(--tracking-heading);
+}
+.entry-subtitle {
+  font-size: 0.75rem;
+  color: var(--color-fg-subtle);
+}
+.entry-meta {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-fg-subtle);
+}
+.entry-detail {
+  color: var(--color-fg-muted);
+  line-height: var(--leading-body);
+}
+.entry-link {
+  transition: color var(--default-transition-duration) var(--ease-standard);
+}
+.entry-link:hover {
+  color: var(--color-accent);
+}
+
+/* 时间线：左列时间 + 右列内容，窄屏自动堆叠 */
+.entry-list--timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.entry-item--timeline {
+  display: grid;
+  gap: 0.25rem;
+}
+.entry-timeline-body {
+  border-left: 1px solid var(--color-border);
+  padding-left: 1.25rem;
+}
+@media (min-width: 40rem) {
+  .entry-item--timeline {
+    grid-template-columns: 9rem minmax(0, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+/* 卡片型（项目 / 奖项 / 认证） */
+.entry-list--grid {
+  display: grid;
+  gap: 1rem;
+}
+.entry-item--grid {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 1rem;
+  backdrop-filter: blur(var(--blur-panel));
+  box-shadow: var(--elevation-card);
+}
+@media (min-width: 40rem) {
+  .entry-list--grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* 熟练度（技能 / 语言）：五点方块 */
+.entry-list--meter {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.entry-meter-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+.entry-level {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.entry-level-cell {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
+}
+.entry-level-cell.is-on {
+  background: var(--color-accent);
+}
+.entry-tags {
+  margin-top: 0.5rem;
+}
+
+/* 标签型（兴趣 / 志愿服务） */
+.entry-list--tags {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.entry-item--tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* ---------- 页脚 ---------- */
+.site-footer {
+  margin-top: 3.5rem;
+  border-top: 1px solid var(--color-border);
+  padding-top: 1.5rem;
+  font-size: 0.75rem;
+  color: var(--color-fg-subtle);
+}

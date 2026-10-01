@@ -124,16 +124,17 @@ async function metrics(page) {
 
     const rootStyle = getComputedStyle(document.documentElement)
     const bodyStyle = getComputedStyle(document.body)
-    // 用稳定的数据钩子定位卡片与标签，而不是 <article>/<section span> ——
-    // 那些标签会随布局调整而变，钩子不会。
-    const card = document.querySelector('[data-section-id="projects"] [data-entry]')
-    const cardStyle = card ? getComputedStyle(card) : null
+    // 版式切换会改变元素形态（编辑式刻意不用卡片），所以不再拿「卡片」当量尺，
+    // 改测真正随主题变化的量：控件圆角、标签圆角、字距、行高、面板模糊令牌。
     const chip = document.querySelector('[data-chip]')
     const chipStyle = chip ? getComputedStyle(chip) : null
+    const control = document.querySelector('.notice')
+    const controlStyle = control ? getComputedStyle(control) : null
     const heading = document.querySelector('h1')
     const headingStyle = heading ? getComputedStyle(heading) : null
-    const paragraph = document.querySelector('section p')
+    const paragraph = document.querySelector('.prose')
     const paragraphStyle = paragraph ? getComputedStyle(paragraph) : null
+    const accentLink = document.querySelector('.btn-primary')
 
     return {
       theme: document.documentElement.getAttribute('data-theme'),
@@ -146,12 +147,10 @@ async function metrics(page) {
       bodyContrast: Number(
         contrast(toRgb(bodyStyle.color), toRgb(rootStyle.backgroundColor)).toFixed(2),
       ),
-      cardRadius: cardStyle ? cardStyle.borderRadius : '(无卡片)',
-      cardShadow: cardStyle ? cardStyle.boxShadow : '(无卡片)',
-      cardBlur: cardStyle
-        ? cardStyle.backdropFilter || cardStyle.webkitBackdropFilter || 'none'
-        : '(无卡片)',
       chipRadius: chipStyle ? chipStyle.borderRadius : '(无徽章)',
+      controlRadius: controlStyle ? controlStyle.borderRadius : '(无控件)',
+      panelBlur: rootStyle.getPropertyValue('--blur-panel').trim() || '(未定义)',
+      accentBg: accentLink ? getComputedStyle(accentLink).backgroundColor : '(未找到)',
       headingTracking: headingStyle ? headingStyle.letterSpacing : '(无标题)',
       paragraphLeading: paragraphStyle ? paragraphStyle.lineHeight : '(无段落)',
     }
@@ -241,10 +240,10 @@ async function appearanceSuite(page, report) {
       collected.push({ ...combo, m })
       report.note(`属性 data-theme=${m.theme} data-scheme=${m.scheme}`)
       report.note(
-        `正文对比度 ${m.bodyContrast}:1 ｜ 卡片圆角 ${m.cardRadius} ｜ 徽章圆角 ${m.chipRadius}`,
+        `正文对比度 ${m.bodyContrast}:1 ｜ 控件圆角 ${m.controlRadius} ｜ 标签圆角 ${m.chipRadius}`,
       )
       report.note(
-        `标题字距 ${m.headingTracking} ｜ 正文行高 ${m.paragraphLeading} ｜ 面板模糊 ${m.cardBlur}`,
+        `标题字距 ${m.headingTracking} ｜ 正文行高 ${m.paragraphLeading} ｜ 面板模糊 ${m.panelBlur}`,
       )
     })
     await report.shot(`${combo.theme} · ${combo.scheme} 整页`)
@@ -270,10 +269,10 @@ async function appearanceSuite(page, report) {
     report.note([...backgrounds].join('  |  '))
   })
 
-  await report.check('两套主题的形状语言确实不同（圆角/徽章/模糊/字距/行高）', async () => {
+  await report.check('两套主题的形状语言确实不同（圆角/字距/行高/模糊）', async () => {
     const fluent = collected.find((entry) => entry.themeId === 'fluent')
     const material = collected.find((entry) => entry.themeId === 'material')
-    const fields = ['cardRadius', 'chipRadius', 'cardBlur', 'headingTracking', 'paragraphLeading']
+    const fields = ['chipRadius', 'controlRadius', 'headingTracking', 'paragraphLeading', 'panelBlur']
     const unchanged = fields.filter((field) => fluent.m[field] === material.m[field])
     if (unchanged.length > 0) {
       throw new Error(`这些形状/排版字段在两套主题间没有区别：${unchanged.join(', ')}`)
@@ -541,6 +540,106 @@ async function contentSuite(page, report) {
   })
 }
 
+/** 套件四：版式（同一份 DOM 的三套编排）。 */
+async function layoutSuite(page, report) {
+  report.section('版式套件')
+
+  const LAYOUTS = [
+    { id: 'editorial', label: '编辑式' },
+    { id: 'terminal', label: '终端' },
+    { id: 'bento', label: '便当格' },
+  ]
+
+  const measured = {}
+
+  /** 量：横向溢出、大标题每行的字符数（用来抓「末行只剩 1–2 个字」的怪折行）、板块顺序。 */
+  const probe = () =>
+    page.evaluate(() => {
+      const root = document.documentElement
+      const h1 = document.querySelector('h1')
+      let lines = []
+      if (h1) {
+        const walker = document.createTreeWalker(h1, NodeFilter.SHOW_TEXT)
+        const nodes = []
+        while (walker.nextNode()) nodes.push(walker.currentNode)
+        const byLine = new Map()
+        for (const node of nodes) {
+          for (let i = 0; i < node.length; i += 1) {
+            const range = document.createRange()
+            range.setStart(node, i)
+            range.setEnd(node, i + 1)
+            const rect = range.getBoundingClientRect()
+            if (rect.width === 0) continue
+            const key = Math.round(rect.top)
+            byLine.set(key, (byLine.get(key) ?? 0) + 1)
+          }
+        }
+        lines = [...byLine.entries()].sort((a, b) => a[0] - b[0]).map(([, n]) => n)
+      }
+      const sections = [...document.querySelectorAll('[data-section-id]')].map((el) => ({
+        id: el.dataset.sectionId,
+        entries: el.querySelectorAll('[data-entry]').length,
+      }))
+      return {
+        overflow: root.scrollWidth - root.clientWidth,
+        lines,
+        sections,
+        railVisible: (() => {
+          const rail = document.querySelector('.rail-nav')
+          return rail ? getComputedStyle(rail).display !== 'none' : null
+        })(),
+      }
+    })
+
+  for (const layout of LAYOUTS) {
+    await report.check(
+      `版式「${layout.label}」：无横向溢出、大标题无孤立单字、板块结构完整`,
+      async () => {
+        await page.goto(TARGET, { waitUntil: 'load' })
+        await page.evaluate(
+          (id) => document.documentElement.setAttribute('data-layout', id),
+          layout.id,
+        )
+        await page.waitForTimeout(600)
+        const info = await probe()
+        measured[layout.id] = info
+        report.note(
+          `横向溢出 ${info.overflow}px ｜ h1 每行字数 [${info.lines.join(', ')}] ｜ 板块 ${info.sections.length} 个 ｜ 侧栏 ${info.railVisible ? '显示' : '隐藏'}`,
+        )
+        if (info.overflow > 0) throw new Error(`出现横向溢出 ${info.overflow}px`)
+        if (info.sections.length < 11) {
+          throw new Error(`板块数仅 ${info.sections.length} 个，结构钩子可能有缺失`)
+        }
+        const last = info.lines.at(-1)
+        if (info.lines.length > 1 && last !== undefined && last <= 2) {
+          throw new Error(`大标题末行只剩 ${last} 个字符，属于怪异折行：[${info.lines.join(', ')}]`)
+        }
+        // 侧栏导航只应在终端版式显示
+        if (layout.id === 'terminal' && info.railVisible !== true) {
+          throw new Error('终端版式下侧栏导航没有显示')
+        }
+        if (layout.id !== 'terminal' && info.railVisible === true) {
+          throw new Error(`版式「${layout.label}」不该显示侧栏导航`)
+        }
+      },
+    )
+    await report.shot(`版式 ${layout.label} 整页`)
+  }
+
+  await report.check('三套版式的板块顺序与条目数完全一致（版式只改编排，不改内容）', async () => {
+    const [reference, ...others] = LAYOUTS.map((layout) => measured[layout.id])
+    if (others.some((entry) => entry === undefined)) {
+      throw new Error('有版式没有采到数据，无法比较')
+    }
+    const fingerprint = (entry) => JSON.stringify(entry.sections)
+    const mismatch = others.filter((entry) => fingerprint(entry) !== fingerprint(reference))
+    if (mismatch.length > 0) {
+      throw new Error('不同版式下的板块顺序或条目数不一致')
+    }
+    report.note(`三套版式的板块指纹一致：${reference.sections.length} 个板块`)
+  })
+}
+
 async function main() {
   const run = createRun({ root: ARTIFACTS_ROOT, title: '站点回归：外观 × 双语 × 内容' })
   const report = createReport({ title: '站点回归：外观 × 双语 × 内容', run })
@@ -576,6 +675,7 @@ async function main() {
     await appearanceSuite(page, report)
     await i18nSuite(page, report)
     await contentSuite(page, report)
+    await layoutSuite(page, report)
 
     await report.check('整个过程中控制台没有任何报错', async () => {
       if (consoleErrors.length > 0) {

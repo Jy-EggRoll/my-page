@@ -1,0 +1,63 @@
+/*
+ * 便当格：十二列网格，每个板块按数据里的 --cell-columns 跨列，靠格子尺寸差制造张力。
+ * 列数来自 src/data/resume.ts 的 BENTO_COLUMNS（与语言无关，只维护一份）。
+ * 注意：格子变窄时两行 headline 容易折出孤立单字，所以这一档把标题字号降一档
+ * （回归脚本里有「末行不得只剩 1–2 个字符」的断言盯着它）。
+ */
+[data-layout='bento'] .layout-shell {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1rem;
+  max-width: 76rem;
+}
+
+[data-layout='bento'] .site-header,
+[data-layout='bento'] .site-footer,
+[data-layout='bento'] .notice {
+  grid-column: 1 / -1;
+}
+[data-layout='bento'] .notice {
+  margin-top: 0;
+}
+
+[data-layout='bento'] .section-shell {
+  grid-column: span var(--cell-columns, 12);
+  margin-top: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 1rem;
+  backdrop-filter: blur(var(--blur-panel));
+  box-shadow: var(--elevation-card);
+}
+[data-layout='bento'] .section-masthead {
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+[data-layout='bento'] .hero-headline {
+  font-size: clamp(1.5rem, 3.4vw, 2.375rem);
+}
+
+/* 格子里不再套卡片：条目退成纯列表 */
+[data-layout='bento'] .entry-list--grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+[data-layout='bento'] .entry-item--grid {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: 0.5rem 0;
+}
+[data-layout='bento'] .section-body {
+  min-width: 0;
+}
+
+@media (max-width: 56rem) {
+  [data-layout='bento'] .section-shell {
+    grid-column: 1 / -1;
+  }
+}

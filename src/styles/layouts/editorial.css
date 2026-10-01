@@ -1,0 +1,66 @@
+/*
+ * 编辑式：左栏书眉 + 右栏正文，层次靠字号与留白，几乎不用卡片与描边。
+ * 两行 headline 在窄栏里会折出孤立单字，所以这一档把标题降一档字号保证整行。
+ */
+[data-layout='editorial'] .layout-shell {
+  max-width: 60rem;
+}
+
+[data-layout='editorial'] .section-shell {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  gap: 2rem;
+  margin-top: 0;
+  padding: 1.75rem 0;
+  border-top: 1px solid var(--color-border);
+}
+
+[data-layout='editorial'] .section-masthead {
+  display: block;
+  margin: 0;
+}
+[data-layout='editorial'] .section-ordinal {
+  display: block;
+  margin-bottom: 0.35rem;
+}
+[data-layout='editorial'] .section-label {
+  font-size: 0.8125rem;
+}
+
+/* 首屏占满整行，并让第二句右缩，形成斜向错位 */
+[data-layout='editorial'] .section-shell.hero {
+  grid-template-columns: minmax(0, 1fr);
+  padding-top: 0;
+  border-top: 0;
+}
+[data-layout='editorial'] .section-shell.hero .section-masthead {
+  margin-bottom: 1.5rem;
+}
+[data-layout='editorial'] .hero-headline {
+  font-size: clamp(1.875rem, 5vw, 3.25rem);
+}
+[data-layout='editorial'] .hero-line + .hero-line {
+  padding-left: 2.5rem;
+}
+
+/* 拆掉卡片，只留排版与细分割线 */
+[data-layout='editorial'] .entry-list--grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+[data-layout='editorial'] .entry-item--grid {
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: 0.75rem 0;
+}
+[data-layout='editorial'] .entry-item--grid .entry-title {
+  font-size: 1rem;
+}
+[data-layout='editorial'] .notice {
+  border: 0;
+  background: transparent;
+  padding: 0;
+}

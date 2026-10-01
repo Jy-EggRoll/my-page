@@ -4,3 +4,7 @@
 @import './themes/material.css';
 @import './themes/glass.css';
 @import './themes/aurora.css';
+@import './layout.css';
+@import './layouts/editorial.css';
+@import './layouts/terminal.css';
+@import './layouts/bento.css';

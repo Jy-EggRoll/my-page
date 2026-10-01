@@ -1,0 +1,150 @@
+/*
+ * 终端 / 仪表盘：左侧路径侧栏 + 右侧面板，等宽字体与方块等级建立工具语感。
+ * 页头被 CSS 移进左栏（同一份 DOM，只是摆放位置不同），因此不再重复渲染一套切换器。
+ */
+[data-layout='terminal'] .layout-shell {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  gap: 1.5rem;
+  max-width: 80rem;
+}
+
+/* 页头与侧栏导航占左栏；其余内容全部落右栏 */
+[data-layout='terminal'] .site-header {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: start;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+}
+[data-layout='terminal'] .rail-nav {
+  display: flex;
+  grid-column: 1;
+  grid-row: 2;
+  align-self: start;
+  position: sticky;
+  top: 1.5rem;
+  flex-direction: column;
+  gap: 0.125rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 0.75rem;
+}
+[data-layout='terminal'] .layout-shell > *:not(.site-header):not(.rail-nav) {
+  grid-column: 2;
+}
+
+[data-layout='terminal'] .rail-link {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  border-radius: var(--radius-control);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+[data-layout='terminal'] .rail-link:hover {
+  background: var(--color-surface-raised);
+}
+[data-layout='terminal'] .rail-path {
+  font-family: var(--font-mono);
+  color: var(--color-accent);
+}
+[data-layout='terminal'] .rail-label {
+  color: var(--color-fg-muted);
+}
+
+/* 板块成为面板：标题栏 + 内容区 */
+[data-layout='terminal'] .section-shell {
+  margin-top: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 1rem;
+  backdrop-filter: blur(var(--blur-panel));
+}
+[data-layout='terminal'] .section-masthead {
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px dashed var(--color-border);
+}
+[data-layout='terminal'] .section-path {
+  display: inline;
+  order: -1;
+  color: var(--color-accent);
+}
+[data-layout='terminal'] .section-label {
+  margin-left: auto;
+}
+[data-layout='terminal'] .notice {
+  margin-top: 0;
+  border-radius: var(--radius-control);
+}
+
+[data-layout='terminal'] .hero-headline {
+  font-family: var(--font-mono);
+  font-size: clamp(1.375rem, 3vw, 2rem);
+}
+
+/* 条目：退成细线分隔的清单，避免面板里再套卡片 */
+[data-layout='terminal'] .entry-item--grid {
+  border: 0;
+  border-top: 1px dashed var(--color-border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: 0.75rem 0;
+}
+[data-layout='terminal'] .entry-item--timeline .entry-meta::before {
+  content: '> ';
+  color: var(--color-accent);
+}
+/* 等级用方块而不是圆点 */
+[data-layout='terminal'] .entry-level-cell {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 0;
+}
+/* 标签前加 # 装饰（纯装饰，标签文本本身不变） */
+[data-layout='terminal'] [data-chip]::before {
+  content: '#';
+  opacity: 0.55;
+  margin-right: 0.125rem;
+}
+
+/* 极淡的网格质感，取色仍走令牌 */
+[data-layout='terminal'] .layout-shell::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+      to right,
+      color-mix(in oklab, var(--color-fg-subtle) 12%, transparent) 0 1px,
+      transparent 1px 3rem
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--color-fg-subtle) 12%, transparent) 0 1px,
+      transparent 1px 3rem
+    );
+}
+
+@media (max-width: 48rem) {
+  [data-layout='terminal'] .layout-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  [data-layout='terminal'] .site-header,
+  [data-layout='terminal'] .rail-nav,
+  [data-layout='terminal'] .layout-shell > *:not(.site-header):not(.rail-nav) {
+    grid-column: 1;
+  }
+  [data-layout='terminal'] .rail-nav {
+    grid-row: auto;
+    position: static;
+  }
+}

@@ -20,6 +20,8 @@ export interface SiteStrings {
 
   footer: string;
   langSwitcherLabel: string;
+  /** 终端版式左侧路径导航的 aria-label */
+  railNavLabel: string;
 }
 
 export const STRINGS: Record<Locale, SiteStrings> = {
@@ -42,6 +44,7 @@ export const STRINGS: Record<Locale, SiteStrings> = {
 
     footer: '由 Astro 与 Tailwind CSS 构建',
     langSwitcherLabel: '切换语言',
+    railNavLabel: '页面内导航',
   },
   en: {
     brand: 'EggRoll',
@@ -64,6 +67,7 @@ export const STRINGS: Record<Locale, SiteStrings> = {
 
     footer: 'Built with Astro and Tailwind CSS',
     langSwitcherLabel: 'Switch language',
+    railNavLabel: 'On this page',
   },
 };
 

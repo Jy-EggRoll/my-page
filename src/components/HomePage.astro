@@ -1,7 +1,7 @@
 ---
 import type { Locale } from '../config/i18n';
 import { SITE_LINKS } from '../config/site';
-import { resumeFor } from '../data/resume';
+import { CHROME_COLUMNS, resumeFor } from '../data/resume';
 import { stringsFor } from '../data/strings';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Contact from './Contact.astro';
@@ -20,58 +20,67 @@ const year = new Date().getFullYear();
 ---
 
 <BaseLayout locale={locale} title={t.pageTitle} description={t.pageDescription}>
-  <div class="mx-auto max-w-5xl px-6 py-10">
+  <!--
+    共享外壳：整页只有一份 DOM，三种版式由 [data-layout] 的 CSS 决定编排。
+    .site-header / .rail-nav 的归属位置也由 CSS 摆放（终端版式把页头移进左侧栏）。
+  -->
+  <div class="layout-shell">
     <SiteHeader locale={locale} />
 
-    <p
-      class="mt-8 rounded-control border border-border bg-accent-soft px-4 py-2 text-xs leading-body text-fg-muted"
+    <nav class="rail-nav" aria-label={t.railNavLabel}>
+      {
+        resume.sections.map((section) => (
+          <a class="rail-link" href={`#${section.id}`}>
+            <span class="rail-path" aria-hidden="true">{`~/${section.id}`}</span>
+            <span class="rail-label">{section.label}</span>
+          </a>
+        ))
+      }
+    </nav>
+
+    <p class="notice">{t.notice}</p>
+
+    <section class="section-shell hero" style={`--cell-columns:${CHROME_COLUMNS.hero}`}>
+      <div class="section-masthead">
+        <span class="section-ordinal" aria-hidden="true">00</span>
+        <span class="section-path" aria-hidden="true">~/intro</span>
+      </div>
+      <div class="section-body">
+        <!-- headline 是「一句话的两个分句」，两行同级呈现，不是标题加副标题 -->
+        <h1 class="hero-headline">
+          {resume.headline.map((line) => <span class="hero-line">{line}</span>)}
+        </h1>
+        <div class="hero-actions">
+          <a class="btn-primary" href={SITE_LINKS.github}>{t.linkGithub}</a>
+          <a class="btn-secondary" href={SITE_LINKS.blog}>{t.linkBlog}</a>
+        </div>
+      </div>
+    </section>
+
+    <section
+      data-section-id="summary"
+      class="section-shell"
+      style={`--cell-columns:${CHROME_COLUMNS.summary}`}
     >
-      {t.notice}
-    </p>
-
-    <section class="mt-10">
-      <!-- headline 是「一句话的两个分句」，两行同级呈现，不是标题加副标题 -->
-      <h1 class="text-4xl font-bold tracking-heading sm:text-5xl">
-        {
-          resume.headline.map((line) => (
-            <span class="block">{line}</span>
-          ))
-        }
-      </h1>
-      <div class="mt-6 flex flex-wrap gap-3">
-        <a
-          href={SITE_LINKS.github}
-          class="rounded-control bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition-opacity ease-standard hover:opacity-90"
-        >
-          {t.linkGithub}
-        </a>
-        <a
-          href={SITE_LINKS.blog}
-          class="rounded-control border border-border bg-surface px-4 py-2 text-sm font-medium transition-colors ease-standard hover:bg-surface-raised"
-        >
-          {t.linkBlog}
-        </a>
+      <div class="section-masthead">
+        <span class="section-ordinal" aria-hidden="true">01</span>
+        <h2 class="section-label">{t.summaryLabel}</h2>
+        <span class="section-path" aria-hidden="true">~/summary</span>
+      </div>
+      <div class="section-body">
+        {resume.summary.map((paragraph) => <p class="prose">{paragraph}</p>)}
       </div>
     </section>
 
-    <section data-section-id="summary" class="mt-12">
-      <h2 class="text-sm font-semibold tracking-heading text-fg-subtle">{t.summaryLabel}</h2>
-      <div class="mt-3 space-y-3">
-        {
-          resume.summary.map((paragraph) => (
-            <p class="max-w-3xl leading-body text-fg-muted">{paragraph}</p>
-          ))
-        }
-      </div>
-    </section>
-
-    {resume.sections.map((section) => <ResumeSection section={section} />)}
+    {
+      resume.sections.map((section, index) => (
+        <ResumeSection section={section} ordinal={String(index + 2).padStart(2, '0')} />
+      ))
+    }
 
     <Contact locale={locale} />
     <StatsEmbed locale={locale} />
 
-    <footer class="mt-14 border-t border-border pt-6 text-xs leading-body text-fg-subtle">
-      © {year} {t.brand} · {t.footer}
-    </footer>
+    <footer class="site-footer">© {year} {t.brand} · {t.footer}</footer>
   </div>
 </BaseLayout>

@@ -1,6 +1,7 @@
 ---
 import type { Locale } from '../config/i18n';
 import { STATS_CARDS, STATS_DARK_VARIANT_FRAGMENT, STATS_PUBLIC_DIR } from '../config/stats';
+import { CHROME_COLUMNS } from '../data/resume';
 import { stringsFor } from '../data/strings';
 import { withBase } from '../utils/url';
 
@@ -13,9 +14,20 @@ const t = stringsFor(locale);
 const base = withBase(`/${STATS_PUBLIC_DIR}`);
 ---
 
-<section class="mt-12">
-  <h2 class="text-sm font-semibold tracking-heading text-fg-subtle">{t.statsLabel}</h2>
-  <div class="mt-4 grid gap-5 sm:grid-cols-2">
+<section
+  data-section-id="stats"
+  class="section-shell mt-12"
+  style={`--cell-columns:${CHROME_COLUMNS.stats}`}
+>
+  <div class="section-masthead">
+    <span class="section-ordinal" aria-hidden="true">13</span>
+    <h2 class="section-label text-sm font-semibold tracking-heading text-fg-subtle">
+      {t.statsLabel}
+    </h2>
+    <span class="section-path" aria-hidden="true">~/stats</span>
+  </div>
+  <div class="section-body">
+    <div class="mt-4 grid gap-5 sm:grid-cols-2">
     {
       STATS_CARDS.map((card) => (
         // 刻意不给 figure 加边框/底色/内边距：SVG 自己就画了一个带描边的圆角卡片，
@@ -47,6 +59,7 @@ const base = withBase(`/${STATS_PUBLIC_DIR}`);
         </figure>
       ))
     }
+    </div>
   </div>
 </section>
 

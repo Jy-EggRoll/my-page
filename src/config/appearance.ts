@@ -71,11 +71,42 @@ const SCHEME: AppearanceGroup = {
 };
 
 /**
+ * 版式维度。
+ * 与主题/明暗不同，版式改变的是**编排**而不是配色 —— 所以它不能只靠换令牌实现，
+ * 需要一份「共享 DOM + 三套纯 CSS 版式」：DOM 里同时具备三种编排所需的构件
+ * （侧栏、书眉序号、路径标签等），由 [data-layout] 决定显示与网格排布。
+ */
+const LAYOUT: AppearanceGroup = {
+  id: 'layout',
+  attribute: 'data-layout',
+  storageKey: 'my-page:layout',
+  label: { zh: '版式', en: 'Layout' },
+  defaultId: 'editorial',
+  options: [
+    {
+      id: 'editorial',
+      label: { zh: '编辑式', en: 'Editorial' },
+      description: { zh: '大字排版与编号书眉，靠字号与留白分层', en: 'Big type and numbered mastheads' },
+    },
+    {
+      id: 'terminal',
+      label: { zh: '终端', en: 'Terminal' },
+      description: { zh: '路径侧栏与面板，工具感的界面语言', en: 'Path rail and panels — tool-like' },
+    },
+    {
+      id: 'bento',
+      label: { zh: '便当格', en: 'Bento' },
+      description: { zh: '错落网格，靠格子尺寸差制造张力', en: 'Mosaic grid with contrasting cell sizes' },
+    },
+  ],
+};
+
+/**
  * 外观维度清单。
  * 切换器渲染与防闪烁脚本初始化都遍历它，不针对某个维度写死逻辑；
- * 将来要加第三个维度（比如密度），只需在这里加一条配置 + 对应的 CSS。
+ * 加维度只需在这里加一条配置 + 对应的 CSS。
  */
-export const APPEARANCE: readonly AppearanceGroup[] = [THEME, SCHEME];
+export const APPEARANCE: readonly AppearanceGroup[] = [THEME, SCHEME, LAYOUT];
 
 /** 取校验过的默认值：配置写错时退回第一个选项，避免页面出现空属性。 */
 export function resolveDefault(group: AppearanceGroup): string {

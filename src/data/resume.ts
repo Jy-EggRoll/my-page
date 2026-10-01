@@ -381,3 +381,32 @@ function assertSameStructure(): void {
 }
 
 assertSameStructure();
+
+/**
+ * 便当格版式下各板块占多少列（十二列制），相邻两节相加为 12，保持「一行一带」的节奏。
+ * 这是**版式关切**且与语言无关，所以放在 locale 数据之外 —— 只维护一份。
+ */
+const BENTO_COLUMNS: Record<string, number> = {
+  education: 4,
+  experience: 8,
+  projects: 7,
+  skills: 5,
+  languages: 5,
+  awards: 7,
+  certifications: 6,
+  interests: 6,
+  volunteer: 6,
+};
+
+/** 取某个板块在便当格版式下的列数；未登记的板块占满整行。 */
+export function columnsFor(sectionId: string): number {
+  return BENTO_COLUMNS[sectionId] ?? 12;
+}
+
+/** 除简历板块外、由页面追加的区块在便当格下的列数（同样两两成带）。 */
+export const CHROME_COLUMNS = {
+  hero: 7,
+  summary: 5,
+  contacts: 6,
+  stats: 12,
+} as const;

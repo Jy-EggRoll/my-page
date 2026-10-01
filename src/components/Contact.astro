@@ -1,6 +1,7 @@
 ---
 import type { Locale } from '../config/i18n';
 import { CONTACTS } from '../config/site';
+import { CHROME_COLUMNS } from '../data/resume';
 import { stringsFor } from '../data/strings';
 
 interface Props {
@@ -11,12 +12,23 @@ const { locale } = Astro.props;
 const t = stringsFor(locale);
 ---
 
-<section class="mt-12">
-  <h2 class="text-sm font-semibold tracking-heading text-fg-subtle">{t.contactsLabel}</h2>
-  <ul class="mt-4 grid gap-3 sm:grid-cols-2">
+<section
+  data-section-id="contacts"
+  class="section-shell mt-12"
+  style={`--cell-columns:${CHROME_COLUMNS.contacts}`}
+>
+  <div class="section-masthead">
+    <span class="section-ordinal" aria-hidden="true">12</span>
+    <h2 class="section-label text-sm font-semibold tracking-heading text-fg-subtle">
+      {t.contactsLabel}
+    </h2>
+    <span class="section-path" aria-hidden="true">~/contact</span>
+  </div>
+  <div class="section-body">
+    <ul class="mt-4 grid gap-3 sm:grid-cols-2">
     {
       CONTACTS.map((contact) => (
-        <li>
+        <li data-entry>
           <a
             href={contact.href}
             target={contact.href.startsWith('http') ? '_blank' : undefined}
@@ -29,5 +41,6 @@ const t = stringsFor(locale);
         </li>
       ))
     }
-  </ul>
+    </ul>
+  </div>
 </section>

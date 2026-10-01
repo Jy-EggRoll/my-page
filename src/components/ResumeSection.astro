@@ -1,5 +1,5 @@
 ---
-import { columnsFor, emphasisFor, type ResumeSection as Section } from '../data/resume';
+import { columnsFor, emphasisFor, hueFor, type ResumeSection as Section } from '../data/resume';
 import TagChips from './TagChips.astro';
 
 interface Props {
@@ -10,6 +10,11 @@ const { section } = Astro.props;
 const LEVELS = [1, 2, 3, 4, 5];
 /** 终端版式的路径标签，由板块 id 派生，不是另写的文案 */
 const path = `~/${section.id}`;
+/** 只把色相交给数据；未登记的板块不加这个变量，CSS 会跟随主题主色 */
+const hue = hueFor(section.id);
+const shellStyle = [`--cell-columns:${columnsFor(section.id)}`, hue === undefined ? null : `--section-hue:${hue}`]
+  .filter((part) => part !== null)
+  .join(';');
 ---
 
 <!--
@@ -22,7 +27,7 @@ const path = `~/${section.id}`;
   data-section-id={section.id}
   data-emphasis={emphasisFor(section.id)}
   class="section-shell"
-  style={`--cell-columns:${columnsFor(section.id)}`}
+  style={shellStyle}
 >
   <div class="section-masthead">
     <h2 class="section-label">{section.label}</h2>
@@ -84,7 +89,7 @@ const path = `~/${section.id}`;
                 <span class="entry-title">{entry.title}</span>
                 {entry.subtitle && <span class="entry-subtitle">{entry.subtitle}</span>}
                 {entry.level !== undefined && (
-                  <span class="entry-level" role="img" aria-label={`${entry.level}/5`}>
+                  <span class="entry-level" role="img" aria-label={`${entry.level}/${LEVELS.length}`}>
                     {LEVELS.map((step) => (
                       <span
                         aria-hidden="true"

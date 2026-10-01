@@ -21,8 +21,10 @@
   --color-fg-muted: oklch(48% 0.014 255);
   --color-fg-subtle: oklch(64% 0.012 255);
 
-  /* 强调色 */
+  /* 强调色：主色 + 两个辅助色，供渐变与板块着色使用，让每个主题不止一个色调 */
   --color-accent: oklch(52% 0.176 262);
+  --color-accent-2: oklch(58% 0.14 205);
+  --color-accent-3: oklch(55% 0.15 285);
   --color-accent-fg: oklch(100% 0 0);
   --color-accent-soft: oklch(94% 0.036 262);
   --color-ring: oklch(52% 0.176 262);

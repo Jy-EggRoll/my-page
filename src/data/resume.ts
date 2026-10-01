@@ -99,7 +99,7 @@ const ZH: ResumeContent = {
         },
         {
           id: 'monitor-pro',
-          title: 'Monitor Pro VSCode 插件',
+          title: 'Monitor Pro VS Code 插件',
           subtitle: '开源协作维护者 · TypeScript + Go',
           meta: '2026.05 – 至今',
           detail: 'VS Code 系统资源监控插件：Go 后端采集配合平滑实时图表，覆盖远程与 WSL 环境。',
@@ -199,7 +199,7 @@ const EN: ResumeContent = {
         {
           id: 'bupt',
           title: 'Beijing University of Posts and Telecommunications',
-          subtitle: 'B.Eng. · Data Science and Big Data Technology',
+          subtitle: 'Undergraduate · Data Science and Big Data Technology',
           meta: 'Sep 2023 – present',
           detail:
             'Core courses: distributed computing and cloud computing, big data fundamentals, Linux development environments.',
@@ -225,7 +225,7 @@ const EN: ResumeContent = {
           subtitle: 'Product Operations',
           meta: 'Oct 2023 – Oct 2025',
           detail:
-            'Owned requirement research and solution design for campus operations and productivity tooling, and wrote the standard user documentation.',
+            'Owned requirement research and solution design for campus operations and productivity tooling, and produced standardised documentation.',
         },
       ],
     },
@@ -240,7 +240,7 @@ const EN: ResumeContent = {
           subtitle: 'Solo developer · Cloudflare stack',
           meta: 'Jan 2026 – present',
           detail:
-            'Cross-repository, cross-branch global file search built on edge computing and distributed indexing, with fuzzy matching for English and pinyin.',
+            'Cross-repository, cross-branch global file search built on edge computing and distributed indexing, with fuzzy matching for Chinese, English and pinyin.',
           href: 'https://github.com/jy-eggroll/repodex',
         },
         {
@@ -275,7 +275,7 @@ const EN: ResumeContent = {
           id: 'cloud',
           title: 'Big data & cloud native',
           level: 4,
-          tags: ['K8s', 'Docker', 'Data components'],
+          tags: ['K8s', 'Docker', 'Big data components'],
         },
         {
           id: 'fullstack',
@@ -314,7 +314,7 @@ const EN: ResumeContent = {
       entries: [
         {
           id: 'tccp',
-          title: 'Tencent Cloud TCCP – Cloud Architect (Professional)',
+          title: 'Tencent Cloud Certified Professional (TCCP) – Cloud Architect',
           subtitle: 'Tencent Cloud & Smart Industries Group',
           meta: 'Aug 2026',
         },
@@ -331,8 +331,8 @@ const EN: ResumeContent = {
       layout: 'tags',
       label: 'Interests',
       entries: [
-        { id: 'tech', title: 'Design & front-end', tags: ['Colour', 'Typography', 'Animation'] },
-        { id: 'music', title: 'Music', tags: ['Piano', 'Bamboo flute'] },
+        { id: 'tech', title: 'Technology', tags: ['Colour', 'Typography', 'Front-end animation'] },
+        { id: 'music', title: 'Music', tags: ['Piano pieces', 'Bamboo flute'] },
         { id: 'art', title: 'Art', tags: ['Calligraphy'] },
       ],
     },
@@ -423,4 +423,27 @@ const EMPHASIS: Record<string, 'major'> = {
 /** 取某个板块的版面权重；未登记的按常规处理。 */
 export function emphasisFor(sectionId: string): 'major' | 'normal' {
   return EMPHASIS[sectionId] ?? 'normal';
+}
+
+/**
+ * 每个板块的色相（度）。
+ * 只给色相：明度与饱和度由主题强调色提供（CSS 用相对颜色语法派生），
+ * 因此同一份数据在 4 套主题 × 明暗下都协调，也让页面不只是单一色调。
+ * 与语言无关，只维护一份。
+ */
+const SECTION_HUES: Record<string, number> = {
+  education: 250,
+  experience: 222,
+  projects: 190,
+  skills: 162,
+  languages: 292,
+  awards: 42,
+  certifications: 12,
+  interests: 322,
+  volunteer: 272,
+};
+
+/** 取某个板块的色相；未登记时返回 undefined，由 CSS 跟随主题主色。 */
+export function hueFor(sectionId: string): number | undefined {
+  return SECTION_HUES[sectionId];
 }

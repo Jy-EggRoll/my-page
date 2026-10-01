@@ -81,7 +81,9 @@
   transition: opacity var(--default-transition-duration) var(--ease-standard);
 }
 .btn-primary {
-  background: var(--color-accent);
+  /* 底色仍用令牌（可测、随主题变），渐变只作叠加，不改变 background-color */
+  background-color: var(--color-accent);
+  background-image: linear-gradient(100deg, var(--color-accent), var(--color-accent-2));
   color: var(--color-accent-fg);
 }
 .btn-primary:hover {
@@ -290,10 +292,56 @@
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 0.9;
-  color: var(--color-fg-subtle);
-  opacity: 0.12;
+  /* 三个强调色做渐变字，让首屏不止一种颜色；装饰元素，不影响可读性 */
+  background-image: linear-gradient(
+    100deg,
+    var(--color-accent),
+    var(--color-accent-2) 45%,
+    var(--color-accent-3)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  opacity: 0.3;
   pointer-events: none;
   user-select: none;
+}
+
+/* ---------- 板块着色 ----------
+   色相来自数据（--section-hue），明度与饱和度取自主题强调色，用相对颜色语法派生。
+   因此同一份数据在 4 套主题 × 明暗下都协调，页面也不再是单一色调。
+   不支持相对颜色语法的浏览器会落到第一行的兜底值（主题主色），不会变成无色。 */
+.section-shell {
+  --section-color: var(--color-accent);
+  --section-color: oklch(from var(--color-accent) l c var(--section-hue, h));
+}
+
+/* 板块标签染上自己的色相，但向正文色混合以保住对比度 */
+.section-shell .section-label {
+  color: color-mix(in oklab, var(--section-color) 62%, var(--color-fg));
+}
+/* 熟练度方块的填充色 */
+.section-shell .entry-level-cell.is-on {
+  background: var(--section-color);
+}
+/* 时间线的左侧竖线 */
+.section-shell .entry-item--timeline .entry-timeline-body {
+  border-left-color: color-mix(in oklab, var(--section-color) 40%, var(--color-border));
+}
+
+/* 标签芯片：底色与文字都取自所在板块的色相 */
+.entry-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.entry-chip {
+  border-radius: var(--radius-chip);
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: color-mix(in oklab, var(--section-color, var(--color-accent)) 18%, transparent);
+  color: color-mix(in oklab, var(--section-color, var(--color-accent)) 75%, var(--color-fg));
 }
 
 /* ---------- 章节强弱：核心经历与作品给更大版面权重 ---------- */

@@ -14,6 +14,8 @@
   --color-fg-subtle: oklch(58% 0.02 285);
 
   --color-accent: oklch(48% 0.16 305);
+  --color-accent-2: oklch(52% 0.12 195);
+  --color-accent-3: oklch(68% 0.15 55);
   --color-accent-fg: oklch(100% 0 0);
   --color-accent-soft: oklch(92% 0.05 305);
   --color-ring: oklch(48% 0.16 305);
@@ -46,6 +48,8 @@
   --color-fg-subtle: oklch(62% 0.014 285);
 
   --color-accent: oklch(80% 0.12 305);
+  --color-accent-2: oklch(80% 0.11 195);
+  --color-accent-3: oklch(84% 0.13 75);
   --color-accent-fg: oklch(20% 0.04 305);
   --color-accent-soft: oklch(31% 0.06 305);
   --color-ring: oklch(80% 0.12 305);

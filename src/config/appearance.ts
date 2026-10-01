@@ -42,7 +42,7 @@ const THEME: AppearanceGroup = {
     {
       id: 'material',
       label: { zh: 'Material 3', en: 'Material 3' },
-      description: { zh: '色调表面，大圆角与实心阴影', en: 'Tonal surfaces with large radii' },
+      description: { zh: '色调表面，大圆角与实心阴影', en: 'Tonal surfaces with large radii and solid shadows' },
     },
     {
       id: 'glass',
@@ -52,7 +52,7 @@ const THEME: AppearanceGroup = {
     {
       id: 'aurora',
       label: { zh: 'Aurora', en: 'Aurora' },
-      description: { zh: '极光，深色底上的多色光晕与发光描边', en: 'Multi-hue glows on a near-black base' },
+      description: { zh: '极光，深色底上的多色光晕与发光描边', en: 'Aurora: multi-hue glows on a near-black base' },
     },
   ],
 };

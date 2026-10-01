@@ -27,7 +27,7 @@ export const STATS_CARDS: readonly StatsCard[] = [
   },
   {
     file: 'languages.svg',
-    title: { zh: '语言分布', en: 'Languages' },
+    title: { zh: '语言分布', en: 'Language distribution' },
     alt: { zh: 'GitHub 语言使用分布', en: 'GitHub language distribution' },
   },
 ];

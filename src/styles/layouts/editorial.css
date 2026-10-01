@@ -8,7 +8,8 @@
 
 [data-layout='editorial'] .section-shell {
   display: grid;
-  grid-template-columns: 5rem minmax(0, 1fr);
+  /* 书眉栏要能容下最长的标签（「GitHub 统计」「志愿服务」），否则会折成两行 */
+  grid-template-columns: 6.5rem minmax(0, 1fr);
   gap: 2rem;
   margin-top: 0;
   padding: 1.75rem 0;

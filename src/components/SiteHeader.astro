@@ -26,7 +26,14 @@ const t = stringsFor(locale);
     <summary class="appearance-summary">{t.appearanceLabel}</summary>
     <div class="appearance-bar">
       <AppearanceSwitcher locale={locale} />
-      <LangSwitcher locale={locale} />
+      <!--
+        语言分组：外壳与分组名由这里提供（LangSwitcher 只管自己的语义与链接），
+        这样四个维度的「分组名 + 药丸」形态完全一致，窄屏浮层面板里也一样。
+      -->
+      <div class="appearance-group appearance-group--lang">
+        <span class="appearance-group-label" aria-hidden="true">{t.languageLabel}</span>
+        <LangSwitcher locale={locale} />
+      </div>
     </div>
   </details>
 </header>

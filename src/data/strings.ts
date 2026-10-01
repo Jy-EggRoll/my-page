@@ -20,6 +20,13 @@ export interface SiteStrings {
 
   footer: string;
   langSwitcherLabel: string;
+  /**
+   * 外观控件条上「语言」分组的显示名。
+   * 与「主题风格 / 明暗 / 版式」同构，刻意用短名词而不是 langSwitcherLabel
+   * （「切换语言 / Switch language」是动作描述，作分组名既不同构又过长 ——
+   * 英文下会把控件条逼到只剩十几像素余量，字号一变就折行）。
+   */
+  languageLabel: string;
   /** 窄屏下收起「外观」控件的按钮文案 */
   appearanceLabel: string;
   /** 终端版式左侧路径导航的 aria-label */
@@ -46,6 +53,7 @@ export const STRINGS: Record<Locale, SiteStrings> = {
 
     footer: '由 Astro 与 Tailwind CSS 构建',
     langSwitcherLabel: '切换语言',
+    languageLabel: '语言',
     appearanceLabel: '外观',
     railNavLabel: '页面内导航',
   },
@@ -70,6 +78,7 @@ export const STRINGS: Record<Locale, SiteStrings> = {
 
     footer: 'Built with Astro and Tailwind CSS',
     langSwitcherLabel: 'Switch language',
+    languageLabel: 'Language',
     appearanceLabel: 'Appearance',
     railNavLabel: 'On this page',
   },

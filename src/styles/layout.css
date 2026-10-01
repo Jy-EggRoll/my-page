@@ -225,7 +225,9 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  /* 品牌与控件条之间只留 8px：英文品牌（EggRoll）更宽，
+     编辑式 912px 的内容宽下要保证「品牌 + 整条控件条」仍在一行 */
+  gap: 0.5rem;
 }
 .site-brand {
   font-size: 0.875rem;
@@ -233,7 +235,8 @@
   letter-spacing: var(--tracking-heading);
 }
 
-/* 主题 / 明暗 / 版式 / 语言收成一条：分组之间用细线分隔，视觉上仍是一条 */
+/* 主题 / 明暗 / 版式 / 语言收成一条：分组之间用细线分隔，视觉上仍是一条。
+   容器质感全部取自令牌（表面 / 描边 / 胶囊圆角 / 面板模糊），主题换了质感也跟着换。 */
 .appearance-bar {
   display: flex;
   flex-wrap: wrap;
@@ -241,7 +244,10 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
   background: var(--color-surface-raised);
-  padding: 0.25rem;
+  /* 亚克力/玻璃主题的模糊令牌（material 为 0，等于没有这一层）；
+     不写死模糊半径，主题改令牌即可 */
+  backdrop-filter: blur(var(--blur-panel));
+  padding: 0.1875rem;
 }
 /* 桌面端控件条常开、摘要隐藏；若在窄屏收起过再回到宽屏，摘要会显出来兜底 */
 .appearance-collapse > summary {
@@ -254,26 +260,57 @@
   display: flex;
   align-items: center;
   gap: 0.125rem;
-  padding: 0 0.375rem;
+  /* 分组左右各 4px：分组名加进来以后仍要守住「品牌 + 整条」在 912px 内单行 */
+  padding: 0 0.25rem;
 }
 .appearance-group + .appearance-group {
   border-left: 1px solid var(--color-border);
 }
+/* 分组名：把「10 个平铺按钮」读成「4 个维度」。纯装饰节点，读屏走 role=group 的 aria-label */
+.appearance-group-label {
+  margin-right: 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  /* 不额外拉字距：分组名占的宽直接吃掉控件条的宽度预算（编辑式内容宽仅 912px），
+     靠字号、字重与颜色区分即可 */
+  white-space: nowrap;
+  color: var(--color-fg-subtle);
+  user-select: none;
+}
+/* 语言分组的外壳在 SiteHeader 里，内层 nav 只保留语义：
+   否则两层 .appearance-group 会把内边距与分隔线叠加两次 */
+.appearance-group--lang > .appearance-group {
+  padding: 0;
+  border: 0;
+}
 .appearance-option {
   border-radius: var(--radius-chip);
-  padding: 0.125rem 0.5rem;
+  /* 横向 7px（原 8px）：高度不变（22px），只把整条压窄一点以容纳分组名 */
+  padding: 0.125rem 0.4375rem;
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--color-fg-muted);
   transition:
     color var(--default-transition-duration) var(--ease-standard),
-    background-color var(--default-transition-duration) var(--ease-standard);
+    background-color var(--default-transition-duration) var(--ease-standard),
+    box-shadow var(--default-transition-duration) var(--ease-standard);
 }
+/* 未选中保持幽灵态：只有悬停才浮出一层浅表面 */
 .appearance-option:hover {
   background: var(--color-surface);
   color: var(--color-fg);
 }
+/* 选中态明确浮起：强调色底 + 从主色派生的细阴影（与 .btn-primary 同一套写法，
+   4 套主题 × 明暗各自成立，不必为每个主题写一条） */
 .appearance-option[aria-pressed='true'] {
+  background: var(--color-accent);
+  color: var(--color-accent-fg);
+  box-shadow:
+    0 1px 2px oklch(from var(--color-accent) l c h / 0.32),
+    0 3px 8px oklch(from var(--color-accent) l c h / 0.24);
+}
+/* 悬停选中的药丸时保持强调底：上面的 :hover 规则与这条同权重，靠顺序让选中态赢 */
+.appearance-option[aria-pressed='true']:hover {
   background: var(--color-accent);
   color: var(--color-accent-fg);
 }
@@ -410,6 +447,11 @@
     flex-wrap: nowrap;
     align-items: center;
     gap: 0.5rem;
+    /* 浮层面板的定位祖先必须是页头本身。
+       原先没有任何祖先声明定位，面板的 position:absolute 就落到「初始包含块」上，
+       top:100% 变成「视口底部 + 8px」（实测 y=808），展开后整块跑到首屏之外。
+       这里定位到页头，top:100% 才是「页头下沿」。 */
+    position: relative;
   }
   .site-brand {
     flex: none;
@@ -450,7 +492,8 @@
   .appearance-bar {
     position: absolute;
     top: calc(100% + 0.5rem);
-    right: 1.25rem;
+    /* 相对页头右沿对齐：面板比页头宽时向左溢出到页面留白里，右侧始终贴齐「外观」按钮 */
+    right: 0;
     z-index: 20;
     flex-direction: column;
     align-items: stretch;
@@ -467,6 +510,13 @@
   .appearance-group {
     flex-wrap: wrap;
     padding: 0.25rem 0;
+  }
+  /* 浮层面板里分组名独占一行：四组「标题 + 药丸」的层次一眼可见，不用挤在同一行。
+     面板宽度充裕，字号提到 13px（与移动端正文下限一致），不沿用窄条的 11px */
+  .appearance-group-label {
+    flex-basis: 100%;
+    margin-right: 0;
+    font-size: 0.8125rem;
   }
   .appearance-group + .appearance-group {
     border-left: 0;

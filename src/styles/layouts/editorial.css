@@ -8,7 +8,7 @@
 
 [data-layout='editorial'] .section-shell {
   display: grid;
-  grid-template-columns: 5.5rem minmax(0, 1fr);
+  grid-template-columns: 5rem minmax(0, 1fr);
   gap: 2rem;
   margin-top: 0;
   padding: 1.75rem 0;
@@ -18,10 +18,6 @@
 [data-layout='editorial'] .section-masthead {
   display: block;
   margin: 0;
-}
-[data-layout='editorial'] .section-ordinal {
-  display: block;
-  margin-bottom: 0.35rem;
 }
 [data-layout='editorial'] .section-label {
   font-size: 0.8125rem;
@@ -81,10 +77,10 @@
   padding: 0.625rem 0;
 }
 
-/* 首屏锚点：幽灵字压在标题右上，靠负边距让它溢出被裁，形成版式的张力 */
+/* 首屏锚点：字标压在标题右上，靠负边距让它溢出被裁，形成版式的张力 */
 [data-layout='editorial'] .hero-mark {
-  top: -2.5rem;
-  right: -1rem;
+  top: -1.5rem;
+  right: -0.5rem;
 }
 
 /* 核心章节（经历/项目）的顶线加深，配合更大的标签与标题形成强弱对比 */

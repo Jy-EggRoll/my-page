@@ -4,11 +4,9 @@ import TagChips from './TagChips.astro';
 
 interface Props {
   section: Section;
-  /** 板块在页面中的序号，用于书眉编号 */
-  ordinal: string;
 }
 
-const { section, ordinal } = Astro.props;
+const { section } = Astro.props;
 const LEVELS = [1, 2, 3, 4, 5];
 /** 终端版式的路径标签，由板块 id 派生，不是另写的文案 */
 const path = `~/${section.id}`;
@@ -27,7 +25,6 @@ const path = `~/${section.id}`;
   style={`--cell-columns:${columnsFor(section.id)}`}
 >
   <div class="section-masthead">
-    <span class="section-ordinal" aria-hidden="true">{ordinal}</span>
     <h2 class="section-label">{section.label}</h2>
     <span class="section-path" aria-hidden="true">{path}</span>
   </div>

@@ -1,6 +1,6 @@
 ---
 import type { Locale } from '../config/i18n';
-import { SITE_LINKS } from '../config/site';
+import { SITE_BRAND_LATIN, SITE_LINKS } from '../config/site';
 import { CHROME_COLUMNS, resumeFor } from '../data/resume';
 import { stringsFor } from '../data/strings';
 import BaseLayout from '../layouts/BaseLayout.astro';
@@ -42,7 +42,6 @@ const year = new Date().getFullYear();
 
     <section class="section-shell hero" style={`--cell-columns:${CHROME_COLUMNS.hero}`}>
       <div class="section-masthead">
-        <span class="section-ordinal" aria-hidden="true">00</span>
         <span class="section-path" aria-hidden="true">~/intro</span>
       </div>
       <div class="section-body">
@@ -55,8 +54,8 @@ const year = new Date().getFullYear();
           <a class="btn-secondary" href={SITE_LINKS.blog}>{t.linkBlog}</a>
         </div>
       </div>
-      <!-- 首屏视觉锚点：品牌首字做成的巨大幽灵字，纯装饰，各版式给它不同的处理 -->
-      <span class="hero-mark" aria-hidden="true">{t.brand.slice(0, 1)}</span>
+      <!-- 首屏视觉锚点：品牌拉丁字标做成的水印，纯装饰，不随语言变化 -->
+      <span class="hero-mark" aria-hidden="true">{SITE_BRAND_LATIN}</span>
     </section>
 
     <section
@@ -65,7 +64,6 @@ const year = new Date().getFullYear();
       style={`--cell-columns:${CHROME_COLUMNS.summary}`}
     >
       <div class="section-masthead">
-        <span class="section-ordinal" aria-hidden="true">01</span>
         <h2 class="section-label">{t.summaryLabel}</h2>
         <span class="section-path" aria-hidden="true">~/summary</span>
       </div>
@@ -75,8 +73,8 @@ const year = new Date().getFullYear();
     </section>
 
     {
-      resume.sections.map((section, index) => (
-        <ResumeSection section={section} ordinal={String(index + 2).padStart(2, '0')} />
+      resume.sections.map((section) => (
+        <ResumeSection section={section} />
       ))
     }
 

@@ -45,11 +45,11 @@
   background: linear-gradient(150deg, var(--color-accent-soft), var(--color-surface) 65%);
 }
 [data-layout='bento'] .hero-mark {
-  font-size: clamp(4rem, 10vw, 8rem);
+  font-size: clamp(2rem, 6vw, 3.5rem);
   opacity: 0.16;
   top: auto;
-  bottom: -1rem;
-  right: 0.5rem;
+  bottom: -0.5rem;
+  right: 0.75rem;
 }
 
 /* 格子里不再套卡片：条目退成纯列表 */

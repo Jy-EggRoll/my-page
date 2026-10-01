@@ -11,6 +11,12 @@ export const SITE_LINKS = {
 } as const;
 
 /**
+ * 品牌拉丁字标。它是字标而非文案，不随语言变化，
+ * 用于首屏那个巨大的水印式锚点。
+ */
+export const SITE_BRAND_LATIN = 'EggRoll';
+
+/**
  * 联系方式：只保留可验证已经公开在你 GitHub 主页上的渠道（GitHub / 博客 / 邮箱）。
  * 手机号、QQ、微信、B 站等一律不上站；显示名按语言放在 src/data/strings.ts。
  */

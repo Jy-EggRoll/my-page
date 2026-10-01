@@ -22,17 +22,12 @@
   display: none;
 }
 
-/* ---------- 书眉（序号 / 标签 / 路径） ---------- */
+/* ---------- 书眉（标签 / 路径） ---------- */
 .section-masthead {
   display: flex;
   align-items: baseline;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
-}
-.section-ordinal {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--color-fg-subtle);
 }
 .section-label {
   font-size: 0.875rem;
@@ -290,9 +285,11 @@
   top: 0;
   right: 0;
   z-index: 0;
-  font-size: clamp(6rem, 18vw, 14rem);
+  /* 拉丁字标，比单个方块字要小一些才不像糊上去的 */
+  font-size: clamp(2.5rem, 9vw, 6.5rem);
   font-weight: 700;
-  line-height: 0.8;
+  letter-spacing: -0.03em;
+  line-height: 0.9;
   color: var(--color-fg-subtle);
   opacity: 0.12;
   pointer-events: none;

@@ -184,8 +184,20 @@
   [data-layout='terminal'] .layout-shell > *:not(.site-header):not(.rail-nav) {
     grid-column: 1;
   }
+  /* 窄屏隐藏侧栏导航：它与页头在窄屏会叠成很高的一块（实测页头一度到 241px），
+     而手机上单列顺读时这套锚点导航的价值有限；桌面端保留。 */
   [data-layout='terminal'] .rail-nav {
-    grid-row: auto;
-    position: static;
+    display: none;
+  }
+  [data-layout='terminal'] .appearance-bar {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    overflow-x: auto;
+  }
+  /* 横向排列时刻度线回到左侧，并恢复移动端的横向滑动 */
+  [data-layout='terminal'] .appearance-group + .appearance-group {
+    border-top: 0;
+    border-left: 1px solid var(--color-border);
   }
 }

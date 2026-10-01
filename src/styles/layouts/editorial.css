@@ -93,3 +93,15 @@
 [data-layout='editorial'] .section-shell[data-emphasis='major'] .section-label {
   font-size: 0.8125rem;
 }
+
+/* 窄屏把书眉栏收到正文上方：两列并排在手机上会把正文挤到 ~152px 宽
+   （还导致 1px 横向溢出），单列后正文拿回整行宽度 */
+@media (max-width: 48rem) {
+  [data-layout='editorial'] .section-shell {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+  [data-layout='editorial'] .section-shell.hero {
+    gap: 0;
+  }
+}

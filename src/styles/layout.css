@@ -356,6 +356,74 @@
   font-size: 1.0625rem;
 }
 
+/* ---------- 移动端 ----------
+   三件事：可点元素至少约 36px（原先只有 22px，连 WCAG 2.5.8 的 24px 都没到）、
+   字号不再低于 13px（原先 12px）、以及页头保持一行 —— 单纯放大触控目标会让
+   控件条换行成好几行（实测页头从 87px 涨到 135px），所以这里让品牌与控件条同行，
+   控件条自身横向滑动。 */
+@media (max-width: 40rem) {
+  .site-header {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .site-brand {
+    flex: none;
+    padding: 0.5rem 0;
+    font-size: 0.9375rem;
+  }
+  .appearance-bar {
+    flex: 1;
+    min-width: 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .appearance-bar::-webkit-scrollbar {
+    display: none;
+  }
+  .appearance-group {
+    flex: none;
+    padding: 0 0.25rem;
+  }
+  .appearance-option {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+  }
+  .rail-link {
+    padding: 0.625rem;
+  }
+  .entry-chip {
+    padding: 0.3125rem 0.625rem;
+    font-size: 0.8125rem;
+  }
+  .entry-meta,
+  .entry-subtitle {
+    font-size: 0.8125rem;
+  }
+  .entry-title {
+    font-size: 1rem;
+  }
+  .section-label {
+    font-size: 0.9375rem;
+  }
+  .prose,
+  .entry-detail {
+    font-size: 0.9375rem;
+  }
+  .btn-primary,
+  .btn-secondary {
+    padding: 0.625rem 1rem;
+    font-size: 0.9375rem;
+  }
+  /* 项目标题是链接：给一点纵向内边距，把触控高度提到 24px 以上 */
+  .entry-item--grid .entry-title a {
+    display: inline-block;
+    padding: 0.25rem 0;
+  }
+}
+
 /* ---------- 页脚 ---------- */
 .site-footer {
   margin-top: 3.5rem;

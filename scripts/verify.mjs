@@ -624,12 +624,14 @@ async function layoutSuite(page, report) {
               `大标题末行只剩 ${last} 个字符，属于怪异折行：[${info.lines.join(', ')}]`,
             )
           }
-          // 侧栏导航只应在终端版式显示
-          if (layout.id === 'terminal' && info.railVisible !== true) {
-            throw new Error('终端版式下侧栏导航没有显示')
+          // 侧栏导航只在桌面宽度的终端版式下出现：窄屏隐藏它是刻意的设计决定
+          // （否则页头会叠成很高的一块，实测一度到 241px）
+          const expectRail = layout.id === 'terminal' && viewport.width >= 1024
+          if (expectRail && info.railVisible !== true) {
+            throw new Error('桌面宽度下终端版式应显示侧栏导航')
           }
-          if (layout.id !== 'terminal' && info.railVisible === true) {
-            throw new Error(`版式「${layout.label}」不该显示侧栏导航`)
+          if (!expectRail && info.railVisible === true) {
+            throw new Error(`视口 ${viewport.name} 下版式「${layout.label}」不该显示侧栏导航`)
           }
         },
       )

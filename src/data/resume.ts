@@ -410,3 +410,17 @@ export const CHROME_COLUMNS = {
   contacts: 6,
   stats: 12,
 } as const;
+
+/**
+ * 需要更大版面权重的板块（核心经历与作品），其余按常规节奏。
+ * 同样与语言无关，只维护一份。
+ */
+const EMPHASIS: Record<string, 'major'> = {
+  experience: 'major',
+  projects: 'major',
+};
+
+/** 取某个板块的版面权重；未登记的按常规处理。 */
+export function emphasisFor(sectionId: string): 'major' | 'normal' {
+  return EMPHASIS[sectionId] ?? 'normal';
+}

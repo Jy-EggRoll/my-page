@@ -115,6 +115,31 @@
   margin-right: 0.125rem;
 }
 
+/* 首屏锚点改用命令行光标：幽灵字在工具语感里不合适 */
+[data-layout='terminal'] .hero-mark {
+  display: none;
+}
+[data-layout='terminal'] .hero-headline::after {
+  content: '';
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.9em;
+  margin-left: 0.25rem;
+  vertical-align: text-bottom;
+  background: var(--color-accent);
+  animation: caret-blink 1.1s steps(1) infinite;
+}
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-layout='terminal'] .hero-headline::after {
+    animation: none;
+  }
+}
+
 /* 极淡的网格质感，取色仍走令牌 */
 [data-layout='terminal'] .layout-shell::before {
   content: '';
@@ -124,14 +149,30 @@
   pointer-events: none;
   background-image: repeating-linear-gradient(
       to right,
-      color-mix(in oklab, var(--color-fg-subtle) 12%, transparent) 0 1px,
+      color-mix(in oklab, var(--color-fg-subtle) 8%, transparent) 0 1px,
       transparent 1px 3rem
     ),
     repeating-linear-gradient(
       to bottom,
-      color-mix(in oklab, var(--color-fg-subtle) 12%, transparent) 0 1px,
+      color-mix(in oklab, var(--color-fg-subtle) 8%, transparent) 0 1px,
       transparent 1px 3rem
     );
+}
+
+/* 控件条在窄侧栏里改为纵向堆叠 */
+[data-layout='terminal'] .appearance-bar {
+  flex-direction: column;
+  align-items: stretch;
+  border-radius: var(--radius-control);
+  width: 100%;
+}
+[data-layout='terminal'] .appearance-group {
+  flex-wrap: wrap;
+  padding: 0.25rem 0;
+}
+[data-layout='terminal'] .appearance-group + .appearance-group {
+  border-left: 0;
+  border-top: 1px solid var(--color-border);
 }
 
 @media (max-width: 48rem) {

@@ -18,14 +18,14 @@ const t = stringsFor(locale);
   style={`--cell-columns:${CHROME_COLUMNS.contacts}`}
 >
   <div class="section-masthead">
-    <span class="section-ordinal" aria-hidden="true">12</span>
+    <span class="section-ordinal" aria-hidden="true">11</span>
     <h2 class="section-label text-sm font-semibold tracking-heading text-fg-subtle">
       {t.contactsLabel}
     </h2>
     <span class="section-path" aria-hidden="true">~/contact</span>
   </div>
   <div class="section-body">
-    <ul class="mt-4 grid gap-3 sm:grid-cols-2">
+    <ul class="contact-list mt-4 grid gap-3 sm:grid-cols-2">
     {
       CONTACTS.map((contact) => (
         <li data-entry>

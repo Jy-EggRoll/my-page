@@ -1,5 +1,5 @@
 ---
-import { columnsFor, type ResumeSection as Section } from '../data/resume';
+import { columnsFor, emphasisFor, type ResumeSection as Section } from '../data/resume';
 import TagChips from './TagChips.astro';
 
 interface Props {
@@ -22,6 +22,7 @@ const path = `~/${section.id}`;
 -->
 <section
   data-section-id={section.id}
+  data-emphasis={emphasisFor(section.id)}
   class="section-shell"
   style={`--cell-columns:${columnsFor(section.id)}`}
 >

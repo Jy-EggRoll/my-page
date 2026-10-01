@@ -10,30 +10,25 @@ const { locale } = Astro.props;
 const groups = appearanceGroupsFor(locale);
 ---
 
-<div class="flex flex-wrap items-center gap-3">
-  {
-    groups.map((group) => (
-      <div
-        class="flex items-center gap-1 rounded-pill border border-border bg-surface-raised p-1"
-        role="group"
-        aria-label={group.label}
-      >
-        {group.options.map((option) => (
-          <button
-            type="button"
-            data-appearance-group={group.id}
-            data-appearance-option={option.id}
-            title={option.description}
-            aria-pressed="false"
-            class="rounded-chip px-3 py-1 text-xs font-medium text-fg-muted transition-colors ease-standard hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-pressed:bg-accent aria-pressed:text-accent-fg"
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
-    ))
-  }
-</div>
+<!-- 只渲染分组本身，外层控件条由 SiteHeader 提供，好让语言切换也并入同一条 -->
+{
+  groups.map((group) => (
+    <div class="appearance-group" role="group" aria-label={group.label}>
+      {group.options.map((option) => (
+        <button
+          type="button"
+          data-appearance-group={group.id}
+          data-appearance-option={option.id}
+          title={option.description}
+          aria-pressed="false"
+          class="appearance-option"
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  ))
+}
 
 <script>
   import { APPEARANCE } from '../config/appearance';

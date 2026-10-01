@@ -12,14 +12,12 @@ interface Props {
 const { locale } = Astro.props;
 ---
 
-<header class="flex flex-wrap items-center justify-between gap-4">
-  <a
-    href={getRelativeLocaleUrl(locale, '/')}
-    class="text-sm font-semibold tracking-heading"
-  >
+<header class="site-header">
+  <a class="site-brand" href={getRelativeLocaleUrl(locale, '/')}>
     {stringsFor(locale).brand}
   </a>
-  <div class="flex flex-wrap items-center gap-3">
+  <!-- 四个维度收进同一条控件条：主题 / 明暗 / 版式 / 语言 -->
+  <div class="appearance-bar">
     <AppearanceSwitcher locale={locale} />
     <LangSwitcher locale={locale} />
   </div>

@@ -11,17 +11,14 @@ const { locale } = Astro.props;
 const others = LOCALES.filter((candidate) => candidate !== locale);
 ---
 
-<nav
-  class="flex items-center gap-1 rounded-pill border border-border bg-surface-raised p-1"
-  aria-label={stringsFor(locale).langSwitcherLabel}
->
+<nav class="appearance-group" aria-label={stringsFor(locale).langSwitcherLabel}>
   {
     others.map((target) => (
       <a
         href={getRelativeLocaleUrl(target, '/')}
         hreflang={LOCALE_META[target].htmlLang}
         lang={LOCALE_META[target].htmlLang}
-        class="rounded-chip px-3 py-1 text-xs font-medium text-fg-muted transition-colors ease-standard hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        class="appearance-option appearance-option--link"
       >
         {LOCALE_META[target].label}
       </a>

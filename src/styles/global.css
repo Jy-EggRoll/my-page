@@ -1,9 +1,24 @@
 @import 'tailwindcss';
+
+/*
+ * 自托管字体。这些 @import 由 Vite 处理 —— 字体文件会被改写成带 base 的产物路径，
+ * 所以子路径部署（astro.config.mjs 的 base: '/my-page'）下不会 404。
+ * 不要改成硬编码的 /fonts/xxx.woff2 绝对路径，那样部署后会全站缺字。
+ *
+ * 只引 wght.css（可变字重轴）：fontsource 的每条 @font-face 都带 unicode-range，
+ * 浏览器只会下载页面真正命中的分片，所以「全量引入」不等于「全量下载」。
+ * Noto Serif SC 虽被拆成 101 个分片，但它只用在字数很少的展示位上。
+ */
+@import '@fontsource-variable/geist/wght.css';
+@import '@fontsource-variable/jetbrains-mono/wght.css';
+@import '@fontsource-variable/noto-serif-sc/wght.css';
+
 @import './theme.css';
-@import './themes/fluent.css';
-@import './themes/material.css';
-@import './themes/glass.css';
-@import './themes/aurora.css';
+@import './themes/paper.css';
+@import './themes/steel.css';
+@import './themes/mineral.css';
+@import './themes/neon.css';
+@import './motion.css';
 @import './layout.css';
 @import './layouts/editorial.css';
 @import './layouts/terminal.css';

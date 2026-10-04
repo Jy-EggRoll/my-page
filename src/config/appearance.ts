@@ -27,32 +27,45 @@ export interface AppearanceGroup {
   options: readonly AppearanceOption[];
 }
 
+/**
+ * 主题维度的四套人格。
+ *
+ * 这四套的差异**首先落在色彩**上（色相锚点 + 中性色温度 + 表面明度阶梯），
+ * 圆角与模糊只是次要的「材质档」—— 上一版把差异全押在圆角和模糊半径上，
+ * 而四套的 bg 彩度都只有 .004（等于中性灰），看起来就是同一套灰换了皮。
+ * 每套的实测取值与对比度校算记录在 ./themes/<id>.css 的注释里。
+ */
 const THEME: AppearanceGroup = {
   id: 'theme',
   attribute: 'data-theme',
   storageKey: 'my-page:theme',
   label: { zh: '主题风格', en: 'Theme' },
-  defaultId: 'fluent',
+  defaultId: 'paper',
   options: [
     {
-      id: 'fluent',
-      label: { zh: 'Fluent', en: 'Fluent' },
-      description: { zh: '亚克力材质，半透明表面与分层阴影', en: 'Acrylic surfaces with layered shadows' },
+      id: 'paper',
+      label: { zh: '纸', en: 'Paper' },
+      description: { zh: '暖米纸底、墨色正文与小圆角，印刷品气质', en: 'Warm paper ground, ink text, tight corners' },
     },
     {
-      id: 'material',
-      label: { zh: 'Material 3', en: 'Material 3' },
-      description: { zh: '色调表面，大圆角与实心阴影', en: 'Tonal surfaces with large radii and solid shadows' },
+      id: 'steel',
+      label: { zh: '钢', en: 'Steel' },
+      description: { zh: '冷调中性色与克制的蓝色强调，工程感基准', en: 'Cool neutrals with a restrained blue accent' },
     },
     {
-      id: 'glass',
-      label: { zh: 'Glass', en: 'Glass' },
-      description: { zh: '玻璃拟态，强背景模糊与细亮描边', en: 'Glassmorphism: heavy blur, fine borders' },
+      id: 'mineral',
+      label: { zh: '矿物', en: 'Mineral' },
+      description: { zh: '青绿强调、方角硬边，工具语感', en: 'Teal accent, square corners, tool-like' },
     },
     {
-      id: 'aurora',
-      label: { zh: 'Aurora', en: 'Aurora' },
-      description: { zh: '极光，深色底上的多色光晕与发光描边', en: 'Aurora: multi-hue glows on a near-black base' },
+      id: 'neon',
+      label: { zh: '霓虹', en: 'Neon' },
+      /* 材质说法要与 themes/neon.css 的现状对齐：毛玻璃只给页头控件条这种小面积控件，
+         内容面板不再消费 --panel-backdrop，所以不能说成「玻璃表面」 */
+      description: {
+        zh: '霓虹辉光与紫调高对比，夜间氛围（毛玻璃只用在页头控件条）',
+        en: 'Neon glow, high-contrast violet, nocturnal — frosted only on the header bar',
+      },
     },
   ],
 };

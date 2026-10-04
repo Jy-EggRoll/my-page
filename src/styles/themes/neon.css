@@ -1,0 +1,82 @@
+/*
+ * Neon：霓虹。
+ *
+ * 色相锚点 H=300（紫罗兰）。紫罗兰是四套里色域最宽的一支 —— 在 L=.50 处 Cmax 有 .294，
+ * 所以浅色档敢用 .19 的彩度（实测 6.57:1）；即便如此深色档也只敢取 .16，
+ * 因为 L=.72 处的 Cmax 收窄到 .172，再高就会被色域映射掉色相纯度，霓虹感反而消失。
+ *
+ * 四套里唯一开光晕与玻璃的一套，也是唯一中性色与强调色相**不同**相的一套：
+ * bg 走 H=300，但文字与边框压在 H=295，差 5 度是为了让大面积的紫不参与正文，
+ * 长文读起来不晃眼。表面是半透明的，所以所有对比度都以「合成到 bg 之后」的结果为准，
+ * 不能拿声明值去算 —— 半透明表面上的文字实际落在更暗的底上，这是本套的余量来源。
+ *
+ * 深色档的辉光直接写进阴影里（0 0 28px 的彩色外扩），这是霓虹风最标志性的细节；
+ * 但同时它也是四套里唯一有模糊成本的：--blur-panel 只允许给页头控件条这种小面积控件，
+ * 大面积内容面板不要消费 --panel-backdrop，理由见 theme.css。
+ */
+[data-theme='neon'] {
+  --color-bg: oklch(97.5% 0.012 300);
+  --color-surface: oklch(100% 0 0 / 0.7);
+  --color-surface-raised: oklch(100% 0 0 / 0.85);
+  --color-border: oklch(88% 0.020 300);
+  --color-border-strong: oklch(64% 0.022 300);
+  --color-fg: oklch(24% 0.026 295);
+  --color-fg-muted: oklch(46% 0.026 295);
+  --color-fg-subtle: oklch(54% 0.024 295);
+  --color-accent: oklch(50% 0.19 300); /* 实测 6.57:1，该色相在 L=.50 的上限 .294 很宽裕 */
+  --color-accent-2: oklch(58% 0.14 195);
+  --color-accent-3: oklch(56% 0.15 340);
+  --color-accent-fg: oklch(100% 0 0);
+  --color-accent-soft: oklch(94% 0.045 300);
+  --color-ring: oklch(50% 0.20 300);
+
+  --radius-card: 0.875rem; /* 14px：唯一的"软"档 */
+  --radius-control: 0.5rem;
+  --radius-chip: 9999px;
+  --blur-panel: 20px;
+  /* 明暗两档只有半径不同（下面 [data-scheme='dark'] 里改 --blur-panel），
+     这里引用令牌即可，不必为明暗各写一条 */
+  --panel-backdrop: blur(var(--blur-panel));
+  --backdrop-layer:
+    radial-gradient(50rem 34rem at 12% 0%, oklch(90% 0.07 315 / 0.6), transparent 60%),
+    radial-gradient(46rem 32rem at 88% 8%, oklch(92% 0.06 210 / 0.55), transparent 60%),
+    radial-gradient(40rem 28rem at 50% 112%, oklch(93% 0.06 165 / 0.5), transparent 62%);
+  --noise-opacity: 0;
+  --tracking-heading: -0.02em;
+  --leading-body: 1.7;
+  --default-transition-duration: 200ms;
+  --hero-glow-primary: 16%;
+  --hero-glow-secondary: 14%;
+
+  --elevation-card: 0 1px 2px oklch(35% 0.05 300 / 0.07), 0 10px 30px oklch(45% 0.12 300 / 0.1);
+  --elevation-raised: 0 2px 6px oklch(35% 0.05 300 / 0.09), 0 18px 44px oklch(45% 0.12 300 / 0.16);
+}
+
+[data-theme='neon'][data-scheme='dark'] {
+  --color-bg: oklch(13% 0.022 300);
+  --color-surface: oklch(20% 0.026 300 / 0.6);
+  --color-surface-raised: oklch(26% 0.030 300 / 0.75);
+  --color-border: oklch(28% 0.024 300);
+  --color-border-strong: oklch(50% 0.020 300); /* 实测 .50 才 3.19:1；.46 只有 2.81:1 不过 */
+  --color-fg: oklch(95% 0.010 300); /* 实测 17.42:1 */
+  --color-fg-muted: oklch(80% 0.016 300); /* 实测 10.74:1 */
+  /* 本套表面是半透明的，文字实际合成在更暗的底上；但控件条用 raised，那里 60% 只剩 4.83:1，
+     余量太薄，统一提到 62% 与其余三套对齐（色相彩度不动） */
+  --color-fg-subtle: oklch(62% 0.018 300);
+  --color-accent: oklch(72% 0.16 300); /* 实测 7.69:1；Cmax@L.72 为 .172，.16 安全 */
+  --color-accent-2: oklch(74% 0.13 195);
+  --color-accent-3: oklch(74% 0.14 340);
+  --color-accent-fg: oklch(15% 0.03 300); /* 实测 7.55:1 */
+  --color-accent-soft: oklch(27% 0.055 300);
+  --color-ring: oklch(78% 0.16 300);
+
+  /* 深色档的光晕要更实、更大半径：近黑底上同一组渐变会被压掉一半存在感 */
+  --blur-panel: 24px;
+  --backdrop-layer:
+    radial-gradient(52rem 36rem at 10% -8%, oklch(40% 0.15 300 / 0.5), transparent 60%),
+    radial-gradient(48rem 34rem at 92% 6%, oklch(44% 0.13 195 / 0.42), transparent 60%),
+    radial-gradient(44rem 30rem at 48% 110%, oklch(42% 0.13 340 / 0.38), transparent 62%);
+
+  --elevation-card: 0 1px 2px oklch(0% 0 0 / 0.4), 0 0 28px oklch(70% 0.15 300 / 0.14);
+  --elevation-raised: 0 2px 8px oklch(0% 0 0 / 0.45), 0 0 44px oklch(70% 0.15 300 / 0.22);
+}

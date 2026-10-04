@@ -1,0 +1,75 @@
+/*
+ * Steel：钢。
+ *
+ * 色相锚点 H=255（冷蓝），且**中性色与强调色同色相** —— 这是与 paper 的结构性差别：
+ * paper 的暖感来自中性色偏离强调色相，steel 的冷感来自两者共相。
+ * 代价是这套主题的灰最接近 L1 默认值，因此它同时充当「对照组」：
+ * 另外三套的冷暖偏移有多明显，和它比一眼就知道。
+ *
+ * 中性色彩度刻意压到 .004~.015：冷色在低彩度下比暖色更容易显脏，
+ * 钢的表面是「干净的灰蓝」，多一点就会变成洗旧的牛仔布。
+ * 深色档强调色必须抬到 L=.72（7.80:1）—— 同一支蓝在浅色档 L=.55 是 4.92:1，
+ * 直接搬进深色档只剩 3.94:1，会低于 AA。
+ *
+ * 材质是最保守的一档：零模糊、零噪点，圆角 0.75rem 走 0.25rem 的整数倍，
+ * chip 取全圆角把「标签」与「按钮」在形状上就分开，不靠颜色区分。
+ */
+[data-theme='steel'] {
+  --color-bg: oklch(97.2% 0.004 255);
+  --color-surface: oklch(100% 0 0);
+  --color-surface-raised: oklch(95.8% 0.006 255);
+  --color-border: oklch(89.5% 0.008 255);
+  --color-border-strong: oklch(64% 0.010 255); /* 实测 3.09:1 */
+  --color-fg: oklch(26% 0.020 255);
+  --color-fg-muted: oklch(46% 0.015 255);
+  --color-fg-subtle: oklch(54% 0.012 255);
+  --color-accent: oklch(55% 0.17 255); /* 实测 4.92:1 */
+  --color-accent-2: oklch(58% 0.12 205);
+  --color-accent-3: oklch(55% 0.14 285);
+  --color-accent-fg: oklch(100% 0 0);
+  --color-accent-soft: oklch(94% 0.036 255);
+  --color-ring: oklch(55% 0.19 255); /* 白底 4.93:1、在 bg 上 4.55:1 */
+
+  --radius-card: 0.75rem;
+  --radius-control: 0.5rem;
+  --radius-chip: 9999px;
+  --blur-panel: 0px;
+  --panel-backdrop: none;
+  --backdrop-layer: none;
+  --noise-opacity: 0;
+  --tracking-heading: -0.02em;
+  --leading-body: 1.75;
+  --default-transition-duration: 150ms;
+  --hero-glow-primary: 12%;
+  --hero-glow-secondary: 10%;
+
+  /* 阴影色带主色相：纯黑阴影落在冷灰底上会显出一层脏边 */
+  --elevation-card: 0 1px 2px oklch(30% 0.02 255 / 0.05), 0 8px 24px oklch(30% 0.02 255 / 0.06);
+  --elevation-raised:
+    0 2px 4px oklch(30% 0.02 255 / 0.06), 0 12px 32px oklch(30% 0.02 255 / 0.1),
+    0 32px 64px oklch(30% 0.02 255 / 0.05);
+}
+
+[data-theme='steel'][data-scheme='dark'] {
+  --color-bg: oklch(16% 0.012 255);
+  --color-surface: oklch(21% 0.014 255);
+  --color-surface-raised: oklch(26% 0.015 255);
+  --color-border: oklch(32% 0.015 255);
+  --color-border-strong: oklch(50% 0.012 255); /* 实测 3.24:1 */
+  --color-fg: oklch(95% 0.005 255);
+  --color-fg-muted: oklch(78% 0.010 255);
+  /* 实测：根底色 4.54:1，但 .entry-meta 实际坐在 .section-shell 的 --color-surface 上（更亮），
+     那里只有 4.14:1；62% 是按真实背景校出来的下限，色相彩度不动 */
+  --color-fg-subtle: oklch(62% 0.012 255);
+  --color-accent: oklch(72% 0.14 255); /* 实测 7.80:1。同一支蓝在浅色档 L=.55 是 4.92:1，直接搬过来只有 3.94:1 会失败 */
+  --color-accent-2: oklch(74% 0.11 205);
+  --color-accent-3: oklch(72% 0.12 285);
+  --color-accent-fg: oklch(18% 0.02 255); /* 实测 7.57:1 */
+  --color-accent-soft: oklch(26% 0.045 255);
+  --color-ring: oklch(78% 0.15 255); /* 实测 9.39:1 */
+
+  /* 深色档相邻表面档之间只有约 1.1:1 的对比，远达不到可辨认门槛；
+     层级由「明度阶梯 + 功能边框」共同承担（曾经试过的内高光最终没有版式采用，已删） */
+  --elevation-card: 0 1px 2px oklch(0% 0 0 / 0.32), 0 8px 24px oklch(0% 0 0 / 0.3);
+  --elevation-raised: 0 2px 8px oklch(0% 0 0 / 0.38), 0 16px 36px oklch(0% 0 0 / 0.42);
+}

@@ -22,11 +22,6 @@ import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
-/** 统计卡片的产物目录，取自站点配置（与页面用的是同一个来源）。 */
-const { STATS_PUBLIC_DIR } = await import(
-  pathToFileURL(join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'config', 'stats.ts')).href
-)
-
 /** 仓库根：本脚本位于 <repo>/scripts/ 下。 */
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -34,24 +29,32 @@ const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const SKILL_DIR =
   process.env.BROWSER_VERIFY_SKILL ?? join(homedir(), '.qoder-cn', 'skills', 'browser-verify')
 
-/** 默认语言的地址；英文站在它的 /en/ 下。 */
-const TARGET = process.env.TARGET_URL ?? 'http://127.0.0.1:4321/my-page/'
+/** 默认语言的地址；英文站在它的 /en/ 下。
+ *  这里必须写 localhost 而不是 127.0.0.1：这台机器上的预览服务器只监听 IPv6 的 ::1，
+ *  直连 127.0.0.1 会被拒绝（ECONNREFUSED）。浏览器对 localhost 会做双栈尝试，
+ *  所以 localhost 是唯一开箱可用的写法。 */
+const TARGET = process.env.TARGET_URL ?? 'http://localhost:4321/my-page/'
 const EN_URL = `${TARGET.replace(/\/$/, '')}/en/`
 
 /** 现场产物目录：放在仓库下被 git 忽略的 .verify/，不用易失的 /tmp。 */
 const ARTIFACTS_ROOT = join(REPO_ROOT, '.verify')
 
-/** 按钮文案来自 src/config/appearance.ts，改配置时这两个清单要同步。 */
-const THEME_OPTIONS = [
-  { label: 'Fluent', id: 'fluent' },
-  { label: 'Material 3', id: 'material' },
-  { label: 'Glass', id: 'glass' },
-  { label: 'Aurora', id: 'aurora' },
-]
-const SCHEME_OPTIONS = [
-  { label: '浅色', id: 'light' },
-  { label: '深色', id: 'dark' },
-]
+/** 按钮文案的唯一来源是 src/config/appearance.ts：这里复制一份清单必然漂移，
+ *  所以直接从配置派生。Node 24 原生剥离类型，type-only import 会被抹掉、运行时无副作用。 */
+const { appearanceGroupsFor } = await import(
+  pathToFileURL(join(REPO_ROOT, 'src', 'config', 'appearance.ts')).href
+)
+
+/** 取某个维度的中文选项，形状保持 { label, id } 不变，下游不必改。 */
+function optionsOf(groupId) {
+  const group = appearanceGroupsFor('zh').find((item) => item.id === groupId)
+  if (!group) throw new Error(`appearance.ts 里没有 id 为「${groupId}」的外观维度`)
+  return group.options.map((option) => ({ label: option.label, id: option.id }))
+}
+
+const THEME_OPTIONS = optionsOf('theme')
+const SCHEME_OPTIONS = optionsOf('scheme')
+const LAYOUTS = optionsOf('layout')
 
 /** 全组合矩阵：主题 × 明暗。 */
 const COMBOS = THEME_OPTIONS.flatMap((theme) =>
@@ -122,6 +125,30 @@ async function metrics(page) {
       return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05)
     }
 
+    /*
+     * sRGB → OKLCH 的彩度与色相。
+     * 用途：证明四套主题的底色真的各有色相锚点，而不是同一个中性灰换了皮 ——
+     * 上一版四套主题的 bg 彩度都只有 .004、色相全挤在 250~300 之间，
+     * 肉眼根本分不出「四套主题」。这个判据专门盯那类退化。
+     * 矩阵取自 OKLab 的标准 sRGB→LMS→Lab 变换（与色彩调研用的是同一组系数）。
+     */
+    const oklch = ([r, g, b]) => {
+      const lin = (v) => {
+        const s = v / 255
+        return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4)
+      }
+      const [lr, lg, lb] = [lin(r), lin(g), lin(b)]
+      const l = Math.cbrt(0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb)
+      const m = Math.cbrt(0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb)
+      const s = Math.cbrt(0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb)
+      const a = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s
+      const bb = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s
+      return {
+        chroma: Math.sqrt(a * a + bb * bb),
+        hue: ((Math.atan2(bb, a) * 180) / Math.PI + 360) % 360,
+      }
+    }
+
     const rootStyle = getComputedStyle(document.documentElement)
     const bodyStyle = getComputedStyle(document.body)
     // 版式切换会改变元素形态（编辑式刻意不用卡片），所以不再拿「卡片」当量尺，
@@ -138,6 +165,45 @@ async function metrics(page) {
     const paragraphStyle = paragraph ? getComputedStyle(paragraph) : null
     const accentLink = document.querySelector('.btn-primary')
 
+    /* ---------- 真实背景色 ----------
+     * 取某个元素真正生效的背景：沿祖先链向上收集有背景的层，半透明的逐层合成，
+     * 直到遇到第一个不透明层（页面底色画在 html 上，所以一定会终止）。
+     * 只读根底色会漏判「面板里的文字」——见 subtleSamples 处的说明。
+     */
+    const parseRgba = (css) => {
+      const matched = css.match(/rgba?\(([^)]+)\)/)
+      if (matched === null) return null
+      const parts = matched[1]
+        .split(/[\s,/]+/)
+        .filter((part) => part !== '')
+        .map(Number)
+      if (parts.length < 3 || parts.slice(0, 3).some(Number.isNaN)) return null
+      return { r: parts[0], g: parts[1], b: parts[2], a: parts.length > 3 ? parts[3] : 1 }
+    }
+    const effectiveBackground = (element) => {
+      const layers = []
+      let node = element
+      while (node instanceof Element) {
+        const parsed = parseRgba(getComputedStyle(node).backgroundColor)
+        if (parsed !== null && parsed.a > 0) {
+          layers.push(parsed)
+          if (parsed.a >= 1) break
+        }
+        node = node.parentElement
+      }
+      // 从最底层往上合成，底层用页面底色兜底
+      let out = toRgb(rootStyle.backgroundColor)
+      for (let i = layers.length - 1; i >= 0; i -= 1) {
+        const layer = layers[i]
+        out = [
+          layer.r * layer.a + out[0] * (1 - layer.a),
+          layer.g * layer.a + out[1] * (1 - layer.a),
+          layer.b * layer.a + out[2] * (1 - layer.a),
+        ]
+      }
+      return out
+    }
+
     return {
       theme: document.documentElement.getAttribute('data-theme'),
       scheme: document.documentElement.getAttribute('data-scheme'),
@@ -145,6 +211,9 @@ async function metrics(page) {
       // 页面底色画在 html 上（这样 -z-10 的装饰背景层才可见），body 是透明的，
       // 所以底色必须从 documentElement 读，读 body 会拿到 rgba(0,0,0,0)。
       pageBg: rootStyle.backgroundColor,
+      // 底色的彩度与色相，供「四套主题是否真的人格独立」的判据使用（见上面 oklch()）
+      bgChroma: Number(oklch(toRgb(rootStyle.backgroundColor)).chroma.toFixed(4)),
+      bgHue: Number(oklch(toRgb(rootStyle.backgroundColor)).hue.toFixed(1)),
       textColor: bodyStyle.color,
       bodyContrast: Number(
         contrast(toRgb(bodyStyle.color), toRgb(rootStyle.backgroundColor)).toFixed(2),
@@ -157,17 +226,29 @@ async function metrics(page) {
       paragraphLeading: paragraphStyle ? paragraphStyle.lineHeight : '(无段落)',
       // 次要文字的对比度。此前只测了正文色，导致浅色主题下次要文字成片不达标
       // （独立复核实测 106 处低于 AA）却没被这套断言发现。
-      subtleSamples: ['.entry-meta', '.entry-subtitle', '.section-label', '.site-footer']
+      //
+      // 量尺必须是**元素真正生效的背景**，不能是根底色：面板（例如便当格的
+      // .section-shell）自带不透明底色，深色档下它比页面底色更亮，同一级文字在它上面
+      // 的对比度更低。实测踩过：纸·深色的 .entry-meta 在根底色上是 4.48:1，
+      // 而它的真实背景只有 4.06:1 —— 只按根底色量会把不达标判成通过。
+      //
+      // 顺带把「芯片」与「控件条分组名」也纳入采样：它们都是「带底色的文字」，
+      // 而此前完全没有被任何断言覆盖（芯片的底色还是半透明的）。
+      subtleSamples: [
+        '.entry-meta',
+        '.entry-subtitle',
+        '.section-label',
+        '.site-footer',
+        '.appearance-group-label',
+        '[data-chip]',
+      ]
         .map((selector) => {
           const el = document.querySelector(selector)
           if (!el) return null
           return {
             selector,
             contrast: Number(
-              contrast(
-                toRgb(getComputedStyle(el).color),
-                toRgb(rootStyle.backgroundColor),
-              ).toFixed(2),
+              contrast(toRgb(getComputedStyle(el).color), effectiveBackground(el)).toFixed(2),
             ),
           }
         })
@@ -304,15 +385,46 @@ async function appearanceSuite(page, report) {
     report.note(`共检查 ${total} 处次要文字，全部 ≥ 4.5:1`)
   })
 
+  await report.check('四套主题各有独立的色相锚点（不是同一套灰换了皮）', async () => {
+    // 只看浅色档：深色档的底色明度低，同样的彩度在 OKLCH 里的可辨性更差，阈值要另设
+    const light = THEME_OPTIONS.map((option) =>
+      collected.find((entry) => entry.themeId === option.id && entry.schemeId === 'light'),
+    ).filter(Boolean)
+    if (light.length !== THEME_OPTIONS.length) {
+      throw new Error(`浅色档没收集齐 ${THEME_OPTIONS.length} 套主题，实际 ${light.length}`)
+    }
+    // 两两之间的色相角距，取最短弧；太近就说明两套主题的中性色温度分不开
+    const tooClose = []
+    for (let i = 0; i < light.length; i += 1) {
+      for (let j = i + 1; j < light.length; j += 1) {
+        const raw = Math.abs(light[i].m.bgHue - light[j].m.bgHue)
+        const gap = Math.min(raw, 360 - raw)
+        if (gap < 30) {
+          tooClose.push(`${light[i].theme}(${light[i].m.bgHue}°)↔${light[j].theme}(${light[j].m.bgHue}°) 只差 ${gap.toFixed(1)}°`)
+        }
+      }
+    }
+    if (tooClose.length > 0) {
+      throw new Error(`这些主题的底色色相太接近：${tooClose.join('；')}`)
+    }
+    report.note(light.map((entry) => `${entry.theme} H=${entry.m.bgHue}° C=${entry.m.bgChroma}`).join(' ｜ '))
+  })
+
   await report.check('两套主题的形状语言确实不同（圆角/字距/行高/模糊）', async () => {
-    const fluent = collected.find((entry) => entry.themeId === 'fluent')
-    const material = collected.find((entry) => entry.themeId === 'material')
+    // 取差异最大的一对：纸（小圆角、零模糊、印刷气质）与霓虹（大圆角、页头控件条上的毛玻璃）。
+    // 注意这里量的是「材质档」，它是主题的次要维度 —— 主题的首要差异由上面那条
+    // 色相判据负责。别把这条当成「主题必须靠圆角区分」。
+    const paper = collected.find((entry) => entry.themeId === 'paper')
+    const neon = collected.find((entry) => entry.themeId === 'neon')
+    if (!paper || !neon) {
+      throw new Error('没收集到 paper / neon 两套主题的度量')
+    }
     const fields = ['chipRadius', 'controlRadius', 'headingTracking', 'paragraphLeading', 'panelBlur']
-    const unchanged = fields.filter((field) => fluent.m[field] === material.m[field])
+    const unchanged = fields.filter((field) => paper.m[field] === neon.m[field])
     if (unchanged.length > 0) {
       throw new Error(`这些形状/排版字段在两套主题间没有区别：${unchanged.join(', ')}`)
     }
-    report.note(fields.map((f) => `${f}: ${fluent.m[f]} → ${material.m[f]}`).join('  ｜  '))
+    report.note(fields.map((f) => `${f}: ${paper.m[f]} → ${neon.m[f]}`).join('  ｜  '))
   })
 
   await report.check('所有组合共用同一套 DOM（一套组件服务全部外观）', async () => {
@@ -546,8 +658,18 @@ async function contentSuite(page, report) {
     // 所以产物里必须真的存在这条规则，否则片段带了也不会变深。
     // （不能用 canvas 取像素验证：该 SVG 含 foreignObject，会被浏览器标记为
     //   「已污染」而禁止读回像素。）
-    const response = await fetch(`${TARGET}${STATS_PUBLIC_DIR}/overview.svg`)
-    const svg = await response.text()
+    //
+    // 这一次取回刻意放在**页面内**，而不是 Node 侧的 fetch：
+    //   - 预览服务器可能只监听 IPv6 的 ::1，Node 的 fetch(undici) 解析 localhost 时
+    //     可能选中 127.0.0.1 直接 ECONNREFUSED；浏览器会做双栈尝试，所以只有 Node 会挂；
+    //   - 地址取自页面自己引用的那张图，跟页面走同一条解析路径，将来改域名/端口/子路径都不会失效，
+    //     也就不必再从 src/config/stats.ts 导入产物目录常量（少一处硬编码）。
+    const svg = await page.evaluate(async () => {
+      const img = document.querySelector('[data-section-id="stats"] img')
+      if (!img) throw new Error('页面里找不到统计卡片图片，无法取回 SVG 产物')
+      const response = await fetch(img.currentSrc || img.src)
+      return response.text()
+    })
     if (!svg.includes(':target')) {
       throw new Error('产物里的统计卡片 SVG 不含 :target 规则，深色变体不会生效')
     }
@@ -578,12 +700,6 @@ async function contentSuite(page, report) {
 /** 套件四：版式（同一份 DOM 的三套编排）。 */
 async function layoutSuite(page, report) {
   report.section('版式套件')
-
-  const LAYOUTS = [
-    { id: 'editorial', label: '编辑式' },
-    { id: 'terminal', label: '终端' },
-    { id: 'bento', label: '便当格' },
-  ]
 
   const measured = {}
 
@@ -626,9 +742,11 @@ async function layoutSuite(page, report) {
       }
     })
 
-  /** 两种视口都要过：粗体排版最容易在窄屏折出孤立单字或横向溢出。 */
+  /** 三档视口都要过：粗体排版最容易在窄屏折出孤立单字或横向溢出，
+   *  而大屏是这次重做专门要修的场景（实测旧版 1920 宽下编辑式把一半屏幕空着）。 */
   const VIEWPORTS = [
     { name: '桌面 1280', width: 1280, height: 900 },
+    { name: '大屏 1920', width: 1920, height: 1080 },
     { name: '窄屏 390', width: 390, height: 844 },
     { name: '窄屏 360', width: 360, height: 800 },
   ]
@@ -660,14 +778,21 @@ async function layoutSuite(page, report) {
               `大标题末行只剩 ${last} 个字符，属于怪异折行：[${info.lines.join(', ')}]`,
             )
           }
-          // 侧栏导航只在桌面宽度的终端版式下出现：窄屏隐藏它是刻意的设计决定
-          // （否则页头会叠成很高的一块，实测一度到 241px）
-          const expectRail = layout.id === 'terminal' && viewport.width >= 1024
+          // 侧栏导航的可见性是一条设计契约：
+          //   窄屏一律隐藏 —— 否则页头会叠成很高的一块（实测一度到 241px），
+          //   且手机单列顺读时锚点导航价值有限；
+          //   桌面宽度（≥1024px）下编辑式与终端显示它 —— 终端放在左栏，
+          //   编辑式作为右侧页边索引，用来吃掉大屏两侧的空白。
+          //   便当格在任何宽度都不显示，这是设计决定而不是遗漏：马赛克格缝就是网格的
+          //   row-gap，而跨行 rail 在有行间距的网格里会把每一行行距都计入自身高度、
+          //   凭空多出几十 rem 空隙；实测「另开第 13 条轨道」的旧方案还会撑高页头行
+          //   （品牌被推低约 120px），所以便当格的导航职责交给格子本身。
+          const expectRail = viewport.width >= 1024 && layout.id !== 'bento'
           if (expectRail && info.railVisible !== true) {
-            throw new Error('桌面宽度下终端版式应显示侧栏导航')
+            throw new Error(`桌面宽度下版式「${layout.label}」应显示侧栏导航`)
           }
           if (!expectRail && info.railVisible === true) {
-            throw new Error(`视口 ${viewport.name} 下版式「${layout.label}」不该显示侧栏导航`)
+            throw new Error(`版式「${layout.label}」在视口 ${viewport.name} 下不该显示侧栏导航`)
           }
         },
       )

@@ -21,7 +21,7 @@
  * 日志级别由 LOG_LEVEL 控制（trace/debug/info/warn/error/fatal），默认 info。
  * 注意：深浅两版是同一份文件，深色变体由客户端 URL 片段触发，不需要拉两次。
  */
-import { copyFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { STATS_CARDS, STATS_PUBLIC_DIR, STATS_REMOTE_BASE } from '../src/config/stats.ts';
@@ -69,6 +69,49 @@ async function fetchCard(url) {
   return body;
 }
 
+const ROOT_SVG_RE = /<svg\b[^>]*>/i;
+const VIEWBOX_ATTR_RE = /\bviewBox\s*=/i;
+
+/**
+ * 给 SVG 根元素补 viewBox —— 显式声明用户坐标与像素的对应关系。
+ *
+ * 上游生成器输出的根元素只有 width/height：
+ *   <svg id="gh-dark-mode-only" width="360" height="210" xmlns="...">
+ * （文件里那些 viewBox="0 0 16 16" 都是内部小图标的，与根元素无关。）
+ *
+ * 诚实的前提：**这个补丁在 <img> 场景下没有可见收益**。按 SVG 规范，缺 viewBox 时用户
+ * 坐标与视口 1:1、内容本不该随元素缩放，但实测不成立：Chromium 153 与 Firefox 都会把它
+ * 当整体等比缩放 —— 对同一份字节只插入 viewBox 的 A/B 对照，在 540px 与 300px 两档逐像素
+ * 比较，最大差 0、PSNR inf，既没有「白卡 + 左上角一点内容」，窄于 360px 也不溢出被裁。
+ * 真正不缩放的是「把 SVG 当顶层文档直接打开」那种引用方式（实测视口 540×315 下根盒仍是
+ * 360×210）。所以这里补 viewBox 是**跨引擎、跨引用方式的保险**，不是对某个引擎缺陷的修正。
+ *
+ * 幂等：已有 viewBox 就原样返回；根标签或 width/height 不符合预期时原样返回并记 warn。
+ * 这里绝不抛错 —— 本脚本的既有纪律是「远端挂掉也不能让构建失败」，
+ * 一处装饰性补丁更不该成为构建的失败点（补不上最多是图不缩放，仍能正常显示）。
+ */
+function ensureViewBox(body, file) {
+  const tag = ROOT_SVG_RE.exec(body)?.[0];
+  if (!tag) {
+    log.warn('SVG 根元素格式不符合预期，未补 viewBox，原样写出', { file });
+    return body;
+  }
+  if (VIEWBOX_ATTR_RE.test(tag)) {
+    log.debug('SVG 根元素已有 viewBox，跳过', { file });
+    return body;
+  }
+  const width = /\bwidth\s*=\s*"([^"]+)"/i.exec(tag)?.[1];
+  const height = /\bheight\s*=\s*"([^"]+)"/i.exec(tag)?.[1];
+  if (!width || !height) {
+    log.warn('SVG 根元素缺少 width/height，无法推算 viewBox，原样写出', { file });
+    return body;
+  }
+  const viewBox = `0 0 ${width} ${height}`;
+  const patched = tag.replace(/\s*>$/, ` viewBox="${viewBox}">`);
+  log.debug('已为 SVG 根元素补 viewBox', { file, viewBox });
+  return body.replace(tag, patched);
+}
+
 async function main() {
   const updateSnapshot = process.argv.includes('--update-snapshot');
   mkdirSync(OUTPUT_DIR, { recursive: true });
@@ -79,12 +122,14 @@ async function main() {
   for (const card of STATS_CARDS) {
     const target = join(OUTPUT_DIR, card.file);
     try {
-      const body = await fetchCard(`${REMOTE_BASE}/${card.file}`);
+      // 远端与快照两条路都会写进 public/，所以两条路都要走 ensureViewBox，否则兜底时问题依旧。
+      const body = ensureViewBox(await fetchCard(`${REMOTE_BASE}/${card.file}`), card.file);
       writeFileSync(target, body, 'utf8');
       fromRemote += 1;
       log.info('已从远端更新统计卡片', { file: card.file, bytes: body.length });
       if (updateSnapshot) {
         mkdirSync(SNAPSHOT_DIR, { recursive: true });
+        // 快照写回的是补过 viewBox 的同一份内容，避免下次兜底又把它退回旧形态。
         writeFileSync(join(SNAPSHOT_DIR, card.file), body, 'utf8');
         log.info('已更新仓库内快照', { file: card.file });
       }
@@ -97,7 +142,7 @@ async function main() {
         process.exitCode = 1;
         continue;
       }
-      copyFileSync(snapshot, target);
+      writeFileSync(target, ensureViewBox(readFileSync(snapshot, 'utf8'), card.file), 'utf8');
       fromSnapshot += 1;
       log.warn('远端拉取失败，改用仓库内快照', { file: card.file, reason });
     }

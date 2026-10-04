@@ -28,11 +28,11 @@ const base = withBase(`/${STATS_PUBLIC_DIR}`);
   <div class="section-body">
     <div class="mt-4 grid gap-5 sm:grid-cols-2">
     {
-      STATS_CARDS.map((card) => (
+      STATS_CARDS.map((card, index) => (
         // 刻意不给 figure 加边框/底色/内边距：SVG 自己就画了一个带描边的圆角卡片，
         // 再套一层框会变成双重边框、且两者外边距不一致，看起来就是「不齐」。
         // 这里只负责标题与图片，卡片本体交给 SVG。
-        <figure>
+        <figure data-reveal style={`--reveal-i:${index}`}>
           <figcaption class="mb-2 text-xs font-medium text-fg-subtle">
             {card.title[locale]}
           </figcaption>

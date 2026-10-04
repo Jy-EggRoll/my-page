@@ -1,0 +1,183 @@
+/*
+ * 动效与叠加层。
+ *
+ * 只负责四件事：加载入场、滚动揭示、纸感噪点、减动效兜底。
+ * 悬停 / 焦点 / 按下这类交互反馈归 layout.css 与 themes/ 所有，这里不重复定义。
+ *
+ * 三条贯穿全文件的纪律：
+ *
+ * 1. **隐藏态只能来自 JS 已接管或 @keyframes 的 from。**
+ *    CSS 滚动驱动动画（animation-timeline: view()）在 Firefox 仍是 preview、Safari 26 以下
+ *    不支持（MDN 支持表）。如果把 `.reveal { opacity: 0 }` 写成基础样式、再靠动画复位，
+ *    那些浏览器上动画不跑，内容就**永久不可见**。所以：
+ *      - 滚动揭示的隐藏态被 `.reveal-ready`（由 JS 写在 <html> 上）限定，JS 没跑就没有它；
+ *      - 加载入场的隐藏态只在 @keyframes 的 from 里，元素在普通规则下没有任何隐藏声明，
+ *        因此「终态 = opacity 1 / transform 无」天然成立（也不需要再写一条 opacity: 1：
+ *        本文件加载在 layout.css 与 layouts/ 之前，那样的声明反而是级联里最弱的一条）。
+ * 2. **只动 opacity 与 transform。** 只有这两个属性是 compositor-only（web.dev 渲染管线：
+ *    style → layout → paint → composite，其余属性会落到重排或重绘）。
+ *    不用 grid-template-rows / height 做展开，不用 will-change 大面积提升。
+ * 3. **减动效段落必须放在文件末尾。** prefers-reduced-motion 规则与动画声明同特异性时
+ *    靠源码顺序生效（MDN），写在前面等于没写。
+ */
+
+/* ---------- 动效参数 ----------
+ * 缓动全部复用 theme.css 的语义令牌（--ease-entrance 是强减速曲线，快起慢停，专给首次入场）。
+ * 时长与位移留在这一层而不是 theme.css：它们不由主题重映射，主题换配色不该改动效节奏。
+ * --default-transition-duration 是「交互反馈」的 150ms 基准，比入场短得多，两者不要混用。
+ */
+:root {
+  --motion-entrance-duration: 380ms;
+  --motion-entrance-rise: 12px;
+  --motion-entrance-step: 55ms;
+  --motion-reveal-duration: 420ms;
+  /* 揭示的位移比入场略大：滚动揭示时元素有充足的周边空白，多走 2px 更有「落位」感 */
+  --motion-reveal-rise: 14px;
+  --motion-reveal-step: 50ms;
+  --motion-reduced-fade-duration: 200ms;
+}
+
+/* ---------- 关键帧 ----------
+ * 刻意**不写 to**：缺省的关键帧取元素自身的计算值 —— 因为没有其它规则给这些元素声明
+ * opacity / transform，那份计算值就是「opacity: 1、transform 无」这个终态。
+ * 这样终态只由级联本身定义一次，不会随版式改动而失配。
+ * 也不写 to { transform: none }：配合 fill-mode: both 会把动画值永久钉在元素上，
+ * 日后任何版式给这些元素加 transform 都会被静默覆盖。
+ */
+@keyframes motion-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-entrance-rise));
+  }
+}
+
+/* 减动效专用：只留淡入，去掉位移这个前庭触发源（MDN 官方示例的做法） */
+@keyframes motion-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---------- 加载入场（首屏，加载即播） ----------
+ * 用 animation-delay 排序，不用 JS 定时器：定时器会在主线程繁忙时抖动，且 JS 未加载时
+ * 元素会先显示再被隐藏。
+ * fill-mode: both 的必要性在 backwards 那一半 —— 它让元素在 animation-delay 期间就停在
+ * from 的隐藏态，否则 stagger 会退化成「依次闪现」。JS/CSS 动画都不支持的环境看不到动画，
+ * 元素直接按普通规则显示终态。
+ */
+.section-shell.hero .section-masthead,
+.hero-line,
+.hero-actions {
+  animation: motion-rise-in var(--motion-entrance-duration) var(--ease-entrance) both;
+  /* 必须写在 shorthand 之后：shorthand 会把 animation-delay 重置为 0。
+     元素只声明「自己是第几位」，间距由 --motion-entrance-step 统一控制。 */
+  animation-delay: calc((var(--motion-entrance-order, 0) - 1) * var(--motion-entrance-step));
+}
+
+/* 逐项 stagger：masthead(0) → 每行标题(1、2、3…) → 按钮组(4)。
+ * 行数与文案来自 data/resume.ts，可能是 1~3 行，所以第 3 行及以后统一落在最后一档，
+ * 不写死行数。 */
+.hero-line {
+  --motion-entrance-order: 1;
+}
+.hero-headline > .hero-line:nth-child(2) {
+  --motion-entrance-order: 2;
+}
+.hero-headline > .hero-line:nth-child(n + 3) {
+  --motion-entrance-order: 3;
+}
+.hero-actions {
+  --motion-entrance-order: 4;
+}
+
+/*
+ * 这里只给首屏的 masthead 做入场，而不是全站 `.section-masthead`：
+ * 除终端版式外首屏 masthead 内只有一条 display:none 的路径标签，动画不可见；
+ * 其余板块的 masthead 全在首屏之外，给它们各加一份合成动画在加载瞬间是纯开销、
+ * 收益为零（用户滚到时动画早已结束）。想让全站 masthead 也入场，把上面那处选择器的
+ * `.section-shell.hero .section-masthead` 直接换成 `.section-masthead` 即可。
+ */
+
+/* ---------- 滚动揭示（IntersectionObserver 一次性加类） ----------
+ * 隐藏态被 .reveal-ready 限定，而这个类只有 BaseLayout 的 IO 脚本在
+ * 「不支持减动效偏好 + 浏览器有 IntersectionObserver」时才写到 <html> 上。
+ * 于是三条兜底各自独立成立：
+ *   a) JS 未加载 / 报错 / 被禁用 → 没有 .reveal-ready → 全部可见；
+ *   b) 用户偏好减动效 → 脚本不加类（文件末尾还有一条更硬的兜底）→ 全部可见；
+ *   c) 浏览器没有 IntersectionObserver → 脚本不加类 → 全部可见。
+ * 任何一条成立，页面都不会出现「永久不可见」的内容。
+ */
+[data-reveal] {
+  transition:
+    opacity var(--motion-reveal-duration) var(--ease-entrance),
+    transform var(--motion-reveal-duration) var(--ease-entrance);
+}
+
+.reveal-ready [data-reveal]:not(.is-revealed) {
+  opacity: 0;
+  transform: translateY(var(--motion-reveal-rise));
+}
+
+/* 列表内的逐个落位：--reveal-i 由 .astro 内联（索引从 0 起），没有它就等价于 0 */
+.reveal-ready [data-reveal] {
+  transition-delay: calc(var(--reveal-i, 0) * var(--motion-reveal-step));
+}
+
+/* ---------- 纸感噪点叠加层 ----------
+ * 用 body::after 而不是新增节点：回归脚本的 DOM 指纹断言要求各外观组合结构一致，
+ * 伪元素不进 DOM 树，天然满足。
+ *
+ * 层序：**必须落在正文之下**，用负 z-index。
+ * 正文里最淡的一级文字（--color-fg-subtle）在「纸」主题下相对底色只有约 4.7:1 的余量，
+ * 噪点若能盖到正文上，会把这一级压向 WCAG AA 的 4.5:1 边界。
+ * 负 z-index 在本页是可见的：BaseLayout 里 fixed inset-0 -z-10 的装饰背景层就是先例
+ * （<html> 的底色画在所有负 z-index 元素之下，所以它不会把这一层挡住）。
+ * 取 -9 只是让层序一眼可读：压在 -z-10 的渐变背景之上、正文之下（-1 等效）。
+ * 因为它在正文之下，也就没有任何对比度需要为此调整。
+ *
+ * 必须是静态的：feTurbulence 只栅格化一次、由浏览器缓存为图像资源；
+ * 一旦给它加动画或让它随视口高频改尺寸，就变成每帧重绘的大面积 background-image。
+ * 也不加 mix-blend-mode —— 混合模式会强制额外的合成路径，观感收益不成比例。
+ *
+ * 只有 --noise-opacity 不为 0 的主题才看得到它（主题各自决定要不要这层纸感）。
+ */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -9;
+  pointer-events: none;
+  opacity: var(--noise-opacity);
+  background-repeat: repeat;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- 减动效兜底（必须留在文件末尾：同特异性靠源码顺序生效） ---------- */
+@media (prefers-reduced-motion: reduce) {
+  /*
+   * 入场保留「有反馈」但去掉位移：把动画换成纯透明度淡入，并缩短时长。
+   * 不写 animation: none 一刀切 —— 那样连淡入都没了，页面会变成硬切；
+   * MDN 的推荐正是「换掉位移/缩放，留下透明度」。
+   * 只覆盖 animation-name / duration，stagger 的 delay 保留：纯淡入的依次出现
+   * 不构成前庭触发源，节奏感还在。
+   */
+  .section-shell.hero .section-masthead,
+  .hero-line,
+  .hero-actions {
+    animation-name: motion-fade-in;
+    animation-duration: var(--motion-reduced-fade-duration);
+  }
+
+  /*
+   * 揭示层两条硬兜底，即使 JS 判断失误（例如偏好是在页面加载后才被改成 reduce）
+   * 也保证不隐藏、不留残影。第一条与上面隐藏态同特异性(0,3,0)、位置更靠后，因此覆盖它。
+   * 颜色等交互反馈一律不动：减动效不等于去掉反馈。
+   */
+  .reveal-ready [data-reveal]:not(.is-revealed) {
+    opacity: 1;
+    transform: none;
+  }
+  [data-reveal] {
+    transition: none;
+  }
+}

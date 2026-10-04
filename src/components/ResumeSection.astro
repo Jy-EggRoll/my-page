@@ -38,8 +38,8 @@ const shellStyle = [`--cell-columns:${columnsFor(section.id)}`, hue === undefine
     {
       section.layout === 'timeline' && (
         <ol class="entry-list entry-list--timeline">
-          {section.entries.map((entry) => (
-            <li data-entry class="entry-item entry-item--timeline">
+          {section.entries.map((entry, index) => (
+            <li data-entry data-reveal style={`--reveal-i:${index}`} class="entry-item entry-item--timeline">
               <p class="entry-meta">{entry.meta}</p>
               <div class="entry-timeline-body">
                 <h3 class="entry-title">{entry.title}</h3>
@@ -55,8 +55,8 @@ const shellStyle = [`--cell-columns:${columnsFor(section.id)}`, hue === undefine
     {
       section.layout === 'grid' && (
         <ul class="entry-list entry-list--grid">
-          {section.entries.map((entry) => (
-            <li data-entry class="entry-item entry-item--grid">
+          {section.entries.map((entry, index) => (
+            <li data-entry data-reveal style={`--reveal-i:${index}`} class="entry-item entry-item--grid">
               <h3 class="entry-title">
                 {entry.href ? (
                   <a
@@ -83,8 +83,8 @@ const shellStyle = [`--cell-columns:${columnsFor(section.id)}`, hue === undefine
     {
       section.layout === 'meter' && (
         <ul class="entry-list entry-list--meter">
-          {section.entries.map((entry) => (
-            <li data-entry class="entry-item entry-item--meter">
+          {section.entries.map((entry, index) => (
+            <li data-entry data-reveal style={`--reveal-i:${index}`} class="entry-item entry-item--meter">
               <div class="entry-meter-head">
                 <span class="entry-title">{entry.title}</span>
                 {entry.subtitle && <span class="entry-subtitle">{entry.subtitle}</span>}
@@ -113,8 +113,8 @@ const shellStyle = [`--cell-columns:${columnsFor(section.id)}`, hue === undefine
     {
       section.layout === 'tags' && (
         <ul class="entry-list entry-list--tags">
-          {section.entries.map((entry) => (
-            <li data-entry class="entry-item entry-item--tags">
+          {section.entries.map((entry, index) => (
+            <li data-entry data-reveal style={`--reveal-i:${index}`} class="entry-item entry-item--tags">
               <span class="entry-title">{entry.title}</span>
               {entry.tags && <TagChips tags={entry.tags} />}
             </li>

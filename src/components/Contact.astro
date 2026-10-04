@@ -26,8 +26,8 @@ const t = stringsFor(locale);
   <div class="section-body">
     <ul class="contact-list mt-4 grid gap-3 sm:grid-cols-2">
     {
-      CONTACTS.map((contact) => (
-        <li data-entry>
+      CONTACTS.map((contact, index) => (
+        <li data-entry data-reveal style={`--reveal-i:${index}`}>
           <a
             href={contact.href}
             target={contact.href.startsWith('http') ? '_blank' : undefined}

@@ -79,5 +79,62 @@ function absoluteHomeUrl(target: Locale): string {
     >
     </div>
     <slot />
+
+    <!--
+      滚动揭示的接管脚本（Astro 会打包成模块，执行时机在 DOM 解析完之后）。
+      只在「浏览器有 IntersectionObserver + 用户没有要求减动效」时才给 <html> 加 .reveal-ready；
+      任何一条不成立就不加，motion.css 里的隐藏态因此永远不会生效，内容全部自然可见。
+      不要与上面那段 is:inline 的防闪烁脚本合并 —— 那段必须同步内联，这段必须是延迟模块。
+    -->
+    <script>
+      const REVEAL_READY_CLASS = 'reveal-ready';
+      const REVEAL_DONE_CLASS = 'is-revealed';
+
+      function setupScrollReveal(): void {
+        const root = document.documentElement;
+        // 静态页没有客户端重渲染，查询一次即可；元素即使日后被替换，这里也不会抛错，
+        // 只是它不再被观察（IO 只对 observe 过的目标回调）。
+        const targets = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
+        if (targets.length === 0) return;
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              entry.target.classList.add(REVEAL_DONE_CLASS);
+              observer.unobserve(entry.target); // 一次性：揭示后不逆转，回滚再滚回来不重播
+            }
+          },
+          // 视口下沿内缩 8%：元素在真正贴上边缘之前就开始淡入，去掉「滚到了才动」的迟滞感
+          { rootMargin: '0px 0px -8% 0px' },
+        );
+
+        /*
+         * 顺序很关键：先把「此刻已经在视口里」的元素直接标成已揭示，再加 .reveal-ready。
+         * 两件事在同一个同步任务里完成，浏览器只会重算一次样式 —— 首屏元素从来没有过
+         * 「隐藏」这个计算值，不会出现「先显示 → 再淡出 → 再淡入」的闪烁（深链接直接
+         * 落在半页时同理）。视口判定用完整视口，比 IO 的 -8% 更宽松，两者不会互相打架。
+         */
+        const viewportHeight = window.innerHeight;
+        for (const target of targets) {
+          const rect = target.getBoundingClientRect();
+          if (rect.top < viewportHeight && rect.bottom > 0) {
+            target.classList.add(REVEAL_DONE_CLASS);
+            continue;
+          }
+          observer.observe(target);
+        }
+
+        root.classList.add(REVEAL_READY_CLASS);
+      }
+
+      /*
+       * 偏好只在这里读一次，**运行中**改成「减少动效」由 motion.css 末尾的 reduce 段实时兜底：
+       * 那段会强制 opacity: 1 / transform: none / transition: none，隐藏态当场失效。
+       * 所以不需要再挂 matchMedia 的 change 监听 —— 少一份 JS 状态就少一处与 CSS 不一致的机会。
+       */
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (!reduceMotion.matches && 'IntersectionObserver' in window) setupScrollReveal();
+    </script>
   </body>
 </html>

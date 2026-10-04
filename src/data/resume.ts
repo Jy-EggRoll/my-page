@@ -383,7 +383,37 @@ function assertSameStructure(): void {
 assertSameStructure();
 
 /**
- * 便当格版式下各板块占多少列（十二列制），相邻两节相加为 12，保持「一行一带」的节奏。
+ * 便当格版式下各板块占多少列（十二列制）。**每一行的列数之和必须等于 12**，
+ * 否则会有板块独占半行、另半行留白（旧版 volunteer/contacts 各占 6 列却前后错位，
+ * 就是这样空掉了半行）。按 DOM 顺序（hero → summary → … → contacts → stats）的分配表：
+ *
+ *   行 1  hero 7            + summary 5        = 12
+ *   行 2  education 4       + experience 8     = 12
+ *   行 3  projects 7        + skills 5         = 12
+ *   行 4  languages 12                          = 12
+ *   行 5  awards 6          + certifications 6 = 12
+ *   行 6  interests 6       + volunteer 6      = 12
+ *   行 7  contacts 4        + stats 8          = 12
+ *
+ * 分行的硬约束（决定了上面这张表长什么样）：网格是稀疏自动排布，**一行只能是
+ * DOM 里连续的一段**，行边界落在「累计满 12 列」的地方。「languages 4 + interests 4 +
+ * volunteer 4」这种把它后面那两条短板块凑一行的分组**做不到**：
+ * DOM 顺序是 languages → awards → certifications → interests → volunteer，
+ * 按这个顺序贪心装箱会得到 languages+awards=10、certifications+interests=10、
+ * volunteer+contacts=8 三条残行，反而空出更多半行。
+ *
+ * 各行高度的依据（一行的高度 = 该行最高的那张卡，矮的会被拉成空壳）：
+ *   - languages 只有 1 条（英语 CET-6），而紧随其后的 awards 有 4 条、是全场最高的卡。
+ *     只要两者同行，languages 就必然被撑到 awards 的高度（实测 1920 下 366px 的卡里
+ *     只有一行内容）。languages 后面没有任何「同样短」的板块可以配对，
+ *     所以只能让它独占一行（12 列）—— 一行里只有一条内容时，卡片高度就等于内容高度（修复后实测 91px）。
+ *   - awards（4 条）与 certifications（2 条）同行，按条目数本可让 awards 多拿一两列，
+ *     但实测 7:5 与 6:6 两种分法的行高都是 366px（1920 下该行由 awards 决定，宽度只影响
+ *     文字换行、不足以改变行高），所以取等分的 6:6，分配表更好记。
+ *   - interests（3 条）与 volunteer（2 条）本来就接近，保持 6 : 6。
+ *   - contacts 恒为单列清单、stats 是两张并排的图，保持 4 : 8。
+ * 代价是总行数从 6 行变成 7 行：这是「不让短内容被拉成空壳」必须付的代价。
+ *
  * 这是**版式关切**且与语言无关，所以放在 locale 数据之外 —— 只维护一份。
  */
 const BENTO_COLUMNS: Record<string, number> = {
@@ -391,8 +421,9 @@ const BENTO_COLUMNS: Record<string, number> = {
   experience: 8,
   projects: 7,
   skills: 5,
-  languages: 5,
-  awards: 7,
+  // 行 4：语言只有 1 条，而与它同行的 awards（4 条）是全场最高的卡 —— 见上方分配表说明
+  languages: 12,
+  awards: 6,
   certifications: 6,
   interests: 6,
   volunteer: 6,
@@ -403,25 +434,30 @@ export function columnsFor(sectionId: string): number {
   return BENTO_COLUMNS[sectionId] ?? 12;
 }
 
-/** 除简历板块外、由页面追加的区块在便当格下的列数（同样两两成带）。 */
+/** 除简历板块外、由页面追加的区块在便当格下的列数（分配表见上一段：行 1 与行 7 成带）。 */
 export const CHROME_COLUMNS = {
   hero: 7,
   summary: 5,
-  contacts: 6,
-  stats: 12,
+  // 联系方式 4 列（单列卡片即可读，见 layouts/bento.css），余下 8 列留给两张统计图铺开
+  contacts: 4,
+  stats: 8,
 } as const;
 
 /**
- * 需要更大版面权重的板块（核心经历与作品），其余按常规节奏。
- * 同样与语言无关，只维护一份。
+ * 章节节奏档位：major = 核心经历与作品，minor = 内容很少、需要收紧的板块，
+ * 未登记的一律走「常规」档。各档的具体数值（上间距 / 标签字号字重 / 线权重）
+ * 集中在 layout.css 的 --rhythm-* 里，这里只声明「谁属于哪一档」，改节奏不必动数据。
  */
-const EMPHASIS: Record<string, 'major'> = {
+const EMPHASIS: Record<string, 'major' | 'minor'> = {
   experience: 'major',
   projects: 'major',
+  languages: 'minor',
+  interests: 'minor',
+  volunteer: 'minor',
 };
 
 /** 取某个板块的版面权重；未登记的按常规处理。 */
-export function emphasisFor(sectionId: string): 'major' | 'normal' {
+export function emphasisFor(sectionId: string): 'major' | 'minor' | 'normal' {
   return EMPHASIS[sectionId] ?? 'normal';
 }
 

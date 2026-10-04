@@ -1,8 +1,13 @@
 /*
  * 便当格：十二列网格，每个板块按数据里的 --cell-columns 跨列，靠格子尺寸差制造张力。
- * 列数来自 src/data/resume.ts 的 BENTO_COLUMNS（与语言无关，只维护一份）。
- * 注意：格子变窄时两行 headline 容易折出孤立单字，所以这一档把标题字号降一档
- * （回归脚本里有「末行不得只剩 1–2 个字符」的断言盯着它）。
+ * 列数来自 src/data/resume.ts 的 BENTO_COLUMNS / CHROME_COLUMNS（与语言无关，只维护一份），
+ * 那份注释里有一张「每行 12 列」的分配表，改列数前先看它。
+ *
+ * 三条纪律：
+ *   1. 每一行的列数之和必须等于 12，否则会有板块独占半行、另半行留白。
+ *   2. 所有轨道都用 minmax(0, 1fr)：1fr 的最小尺寸是 auto，长英文单词会撑破轨道并造成横向溢出。
+ *   3. 格子变窄时两行 headline 容易折出孤立单字，所以这一档的标题字号按视口分三档下降
+ *      （回归脚本里有「末行不得只剩 1–2 个字符」的断言盯着它）。
  */
 [data-layout='bento'] .layout-shell {
   display: grid;
@@ -18,19 +23,56 @@
 
 [data-layout='bento'] .section-shell {
   grid-column: span var(--cell-columns, 12);
+  display: flex;
+  flex-direction: column;
   margin-top: 0;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
   background: var(--color-surface);
-  padding: 1rem;
+  /* 内边距取自章节节奏变量（major 1.375rem / 常规 1rem / minor 0.875rem） */
+  padding: var(--rhythm-pad);
   box-shadow: var(--elevation-card);
 }
+/*
+ * 内容在格子里纵向居中。
+ * 为什么不是靠近顶部：同一行两张卡的内容长度天然不等，短的那张会被拉伸成一格空壳，
+ * 顶对齐时「空」全部堆在下方，看起来像没写完；居中后它是「一格里留白均匀」，是刻意的。
+ * 这也让「语言」这种只有一条目的格子不必靠硬编码的 min-height 去撑。
+ */
+[data-layout='bento'] .section-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+/* 书眉：刻度 + 标签左对齐（不再用 space-between，否则刻度出现在左端时标签会被推到右端） */
 [data-layout='bento'] .section-masthead {
-  justify-content: space-between;
+  position: relative;
+  justify-content: flex-start;
   margin-bottom: 0.75rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 0;
 }
+/* 分隔线改成渐隐的 hairline；::before 已被刻度占用，所以用 ::after（都不进 DOM） */
+[data-layout='bento'] .section-masthead::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 1px;
+  background-image: linear-gradient(
+    90deg,
+    var(--rhythm-rule),
+    color-mix(in oklab, var(--rhythm-rule) 40%, transparent) 55%,
+    transparent
+  );
+}
+/* major 档的格子用更实的描边从整片格子里抬出来 */
+[data-layout='bento'] .section-shell[data-emphasis='major'] {
+  border-color: color-mix(in oklab, var(--section-color) 30%, var(--color-border));
+}
+/* 标题字号两档：默认（格子最宽）→ 84rem（大屏放开）。
+   便当格不再有 rail 占列，所以没有「64rem 格子变窄」那一档了。 */
 [data-layout='bento'] .hero-headline {
   font-size: clamp(1.5rem, 3.4vw, 2.375rem);
 }
@@ -43,7 +85,10 @@
   font-size: clamp(2rem, 6vw, 3.5rem);
   opacity: 0.16;
   top: auto;
-  bottom: -0.5rem;
+  /* 定位用的是卡片**内边距盒**，而溢出量看的是卡片**边框盒**：
+     bottom: -0.5rem 时字标的 border-box 下缘落到卡片下缘之外 7px（实测），
+     字形下缘被切、读起来像渲染故障。改成正值后字标完整落在卡片内。 */
+  bottom: 0.25rem;
   right: 0.75rem;
 }
 
@@ -59,12 +104,100 @@
   backdrop-filter: none;
   padding: 0.5rem 0;
 }
+
+/*
+ * 联系方式恒为单列，**不随视口回到双列**。
+ * 联系方式只占 4 列，最宽的大屏（96rem 内容区）下这个格子也只有约 410px；
+ * 再分两列，每张卡只剩约 200px，而卡片内容（标签 + 邮箱 handle）最窄要 220px
+ * （实测 "JyEggRoll@outlook.com" 在 12px 等宽下约 151px，加标签、间距与内边距），
+ * 于是 handle 会顶出卡片。单列后 3 张卡横排成一条清单，handle 靠右对齐，更好读。
+ */
+[data-layout='bento'] .contact-list {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/*
+ * 时间线条目：便当格的格子宽度由列数决定，可能比「9rem 时间列 + 正文最小宽度」还窄
+ * （实测 1280 下 education 只有 4 列 ≈ 336px）。此时并排的时间列会把正文压到 ~140px，
+ * 英文单词（"distributed computing" 约 140px）就会顶出卡片。
+ * 用**容器查询**按格子自己的宽度决定并排还是另起一行，而不是再写一个视口断点 ——
+ * 列数一改，视口断点立刻失效，容器查询不会。旧浏览器不支持时退回基础规则的并排形态。
+ */
 [data-layout='bento'] .section-body {
+  container-type: inline-size;
+}
+[data-layout='bento'] .entry-item--timeline {
+  grid-template-columns: minmax(0, 1fr);
+}
+@container (min-width: 22rem) {
+  [data-layout='bento'] .entry-item--timeline {
+    grid-template-columns: 9rem minmax(0, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+/*
+ * 统计格：两张 SVG 在 ≥640px 视口下就是两列（组件上的 sm:grid-cols-2），
+ * 尺寸由 layout.css 的 .stats-light/.stats-dark { width: 100% } 接管 ——
+ * 固定 360px 宽曾让这一整行只被两条窄图占住，右边全空。
+ */
+[data-layout='bento'] .stats-light,
+[data-layout='bento'] .stats-dark {
   min-width: 0;
 }
 
 @media (max-width: 56rem) {
   [data-layout='bento'] .section-shell {
     grid-column: 1 / -1;
+  }
+}
+
+/*
+ * 窄屏再降一档标题下限。基础规则的 1.5rem（24px）在 360px 放不下：
+ * 内容宽 278px 时第一行「11 个汉字 × 1em ≈ 264px」已经只差 14px，
+ * 而第二行还要被 3rem 的错位缩进吃掉 48px（只剩 230px），末尾两个字必然掉到第三行
+ * （回归实测 h1 每行字数 [11, 9, 2]）。下限降到 1.25rem 后 11 字约 220px，
+ * 两行分别有 278 / 230 可用，都放得下。
+ * 斜率（3.4vw）与上限（2.375rem）刻意不动：588px 以上本来就取不到下限，行为完全不变。
+ */
+@media (max-width: 48rem) {
+  [data-layout='bento'] .hero-headline {
+    font-size: clamp(1.25rem, 3.4vw, 2.375rem);
+  }
+}
+
+/*
+ * ---------- 便当格不显示页边索引栏 ----------
+ *
+ * 这是设计决定，不是遗漏。马赛克格缝就是网格的 row-gap（本文件顶部的 gap: 1rem），
+ * 而页边索引栏要跨满整页就得跨全部隐式行 —— 在**有**行间距的网格里，大跨度会把
+ * 被跨过的每一行行距都算进 rail 的高度，凭空多出几十 rem 的空隙（这正是编辑式能用
+ * 「大跨度 + 零行距」、便当格不能用的区别：编辑式外层只有 column-gap，没有 row-gap）。
+ *
+ * 曾经的做法是「另开第 13 条轨道放 rail」，实测证明不成立：
+ *   - rail 的高度恒为 276px、只占第 1 行（负数线号落回显式网格边界，见 editorial.css 的说明），
+ *     所谓 sticky 行程只有一行；
+ *   - 多出的那条轨道把**页头行**撑高，品牌区被推到 y≈178（比正确位置低约 120px），
+ *     左上角出现一大片空白。
+ *
+ * 所以网格回到干净的 12 列，页头/页脚重新用 1 / -1 跨满它们。
+ * 注意列轴上的 -1 与行轴不同：这 12 条列轨道是**显式**的（repeat(12, ...) 写在
+ * grid-template-columns 里），-1 在这里指向真实存在的最后一条列线，是安全的写法。
+ *
+ * 版式的导航职责由编辑式（页边索引）与终端（工具侧栏）承担，便当格靠格子本身：
+ * 每格是一块内容，格子之间的缝隙就是它的语法。
+ */
+[data-layout='bento'] .rail-nav {
+  display: none;
+}
+
+/* ---------- ≥84rem：把大屏让出来的横向空间真正用掉 ---------- */
+@media (min-width: 84rem) {
+  [data-layout='bento'] .layout-shell {
+    /* 96rem：1920 视口下两侧各留约 192px，比旧版 1216px 的内容区多用掉约 320px */
+    max-width: 96rem;
+  }
+  [data-layout='bento'] .hero-headline {
+    font-size: clamp(1.75rem, 3vw, 2.375rem);
   }
 }

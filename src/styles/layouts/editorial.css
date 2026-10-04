@@ -1,6 +1,10 @@
 /*
  * 编辑式：左栏书眉 + 右栏正文，层次靠字号与留白，几乎不用卡片与描边。
- * 两行 headline 在窄栏里会折出孤立单字，所以这一档把标题降一档字号保证整行。
+ * ≥64rem 再长出右页边索引栏（.rail-nav），把大屏两侧的空白变成有内容的栏位。
+ *
+ * 为什么不是「把 max-width 调大」：正文行宽超过约 34 个汉字就会丢行，
+ * 拉宽等于把文章变成横条。所以宽屏多出来的空间交给「栏距 + 页边索引」，
+ * 正文列自己由 layout.css 的 .prose/.entry-detail { max-width: 34rem } 封顶。
  */
 [data-layout='editorial'] .layout-shell {
   max-width: 60rem;
@@ -13,23 +17,46 @@
   grid-template-columns: 8rem minmax(0, 1fr);
   gap: 2rem;
   margin-top: 0;
-  padding: 1.75rem 0;
-  border-top: 1px solid var(--color-border);
+  /* 上间距由章节节奏变量给出（major 3.5rem / 常规 2.25rem / minor 1.5rem），
+     下间距交给下一个章节的 padding-top 与页脚的 margin-top —— 一条边只由一方负责，
+     节奏才不会被「上一节的 padding-bottom + 下一节的 padding-top」叠成不可控的间距。 */
+  padding: var(--rhythm-gap) 0 0;
+  border-top: 0;
+  position: relative;
 }
-
+/*
+ * 分隔线改成渐隐的 hairline（刻度线母题的横向延伸）：从 --rhythm-rule 起笔、
+ * 到 70% 处已经透明，不再是一条「从头到尾一样重」的实线。
+ * 用伪元素而不是 border：渐变不能画在 border 上，而 border-image 无法随主题令牌改色。
+ * hairlines 的权重按档位取 --rhythm-rule（major 提到 --color-border-strong）。
+ */
+[data-layout='editorial'] .section-shell::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background-image: linear-gradient(
+    90deg,
+    var(--rhythm-rule),
+    color-mix(in oklab, var(--rhythm-rule) 45%, transparent) 45%,
+    transparent 70%
+  );
+}
+/* 书眉横排：刻度 + 标签同一行，标签折行时刻度留在首行左侧 */
 [data-layout='editorial'] .section-masthead {
-  display: block;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
   margin: 0;
-}
-[data-layout='editorial'] .section-label {
-  font-size: 0.8125rem;
 }
 
 /* 首屏占满整行，并让第二句右缩，形成斜向错位 */
 [data-layout='editorial'] .section-shell.hero {
   grid-template-columns: minmax(0, 1fr);
   padding-top: 0;
-  border-top: 0;
+}
+[data-layout='editorial'] .section-shell.hero::after {
+  content: none;
 }
 [data-layout='editorial'] .section-shell.hero .section-masthead {
   margin-bottom: 1.5rem;
@@ -95,15 +122,6 @@
   opacity: 1;
 }
 
-/* 核心章节（经历/项目）的顶线加深，配合更实的前景色形成强弱对比。
-   刻意不放大标签字号：书眉栏窄，放大后长标签会折行（实测 "Open source" 会折成两行）。 */
-[data-layout='editorial'] .section-shell[data-emphasis='major'] {
-  border-top-color: var(--color-fg-subtle);
-}
-[data-layout='editorial'] .section-shell[data-emphasis='major'] .section-label {
-  font-size: 0.8125rem;
-}
-
 /* 窄屏把书眉栏收到正文上方：两列并排在手机上会把正文挤到 ~152px 宽
    （还导致 1px 横向溢出），单列后正文拿回整行宽度 */
 @media (max-width: 48rem) {
@@ -113,5 +131,92 @@
   }
   [data-layout='editorial'] .section-shell.hero {
     gap: 0;
+  }
+}
+
+/*
+ * ---------- 宽屏：正文列 + 右页边索引 ----------
+ *
+ * 断点取 64rem（1024px）：与 scripts/verify.mjs 版的版式套件同一条线
+ * （视口 ≥1024px 时三套版式都必须显示 .rail-nav）。
+ *
+ * 外层 .layout-shell 变成两列，rail 落在右列并 sticky 跟随阅读；
+ * 1fr 列内部仍是「书眉 | 正文」两列，所以宽屏读到的是「书眉 | 正文 …… 页边索引」。
+ *
+ * 为什么是 grid-row: 1 / span 60，而不是直觉上的 1 / -1：
+ * 本网格的行**全部是隐式行**（行由内容生成，没写 grid-template-rows），而负数线号是从
+ * **显式网格**末尾往前数、再落到显式网格之外的。没有显式行时 -1 就等于第 2 条线，
+ * 于是 1 / -1 只覆盖第 1 行 —— 曾经的实际后果是：rail 把「页头所在行」撑到 276px，
+ * 首屏大标题上方凭空多出 284px 空洞（heroBody.top − 页头下沿）。
+ * 改用一个「足够大的显式跨度」跨满整页即可：外层网格只声明了 column-gap、没有 row-gap，
+ * 被 span 带出来的 60 个隐式空行高度为 0、行距也为 0，因此不产生任何多余空隙，
+ * 而 rail 的网格区高度 = 整页高度，sticky 才有真正可移动的行程。
+ *
+ * 代价（span 60 是上限而不是精确值）：它跨的行数由版式决定，若日后板块长到超过 60 行，
+ * rail 会比整页略短，sticky 在最后一屏会提前停住。这里刻意不写死内容行数：
+ * 行数随简历条目数变化，写死就意味着每加一条经历都要回来改这个数字；
+ * 60 已是当前实测行数（约 20 行）的三倍余量，真要增长到越界时再调大即可。
+ */
+@media (min-width: 64rem) {
+  [data-layout='editorial'] .layout-shell {
+    /* 72rem：正文列（34rem）与书眉列（8rem）之外，把 rail 的那一列也真正占住 ——
+       只加列不加宽度的话，rail 会从正文里抢走 208px，正文反而更窄。 */
+    max-width: 72rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 13rem;
+    column-gap: 3rem;
+    align-items: start;
+  }
+  [data-layout='editorial'] .rail-nav {
+    grid-column: 2;
+    grid-row: 1 / span 60;
+    align-self: start;
+    display: flex;
+    position: sticky;
+    top: 2.5rem;
+    /* 页边索引形态：去掉卡片外壳，只留一条贴着正文右侧的发丝线 */
+    border: 0;
+    border-left: 1px solid var(--color-border);
+    border-radius: 0;
+    background: transparent;
+    padding: 0.25rem 0 0.25rem 1rem;
+  }
+  [data-layout='editorial'] .layout-shell > *:not(.rail-nav) {
+    grid-column: 1;
+  }
+}
+
+/* 大屏：再多让出一点横向余量 —— 栏距与页边索引变宽，正文列宽（34rem）不变 */
+@media (min-width: 84rem) {
+  [data-layout='editorial'] .layout-shell {
+    max-width: 78rem;
+    grid-template-columns: minmax(0, 1fr) 16rem;
+    column-gap: 4rem;
+  }
+  [data-layout='editorial'] .section-shell {
+    grid-template-columns: 12rem minmax(0, 1fr);
+    column-gap: 2.5rem;
+  }
+  [data-layout='editorial'] .hero-headline {
+    font-size: clamp(2rem, 4.2vw, 4.5rem);
+    /* 大标题是展示体、不受 34rem 正文度量约束，但也不能一行横穿整个 1920。
+       上限必须按「11 个汉字 + 字距」的实际排版宽度给：4.5rem 下单个汉字 72px，
+       11 字约 800px，而旧的 46rem（736px）比这个窄 —— 于是每行末两个字被挤到第二行
+       （实测 1920 下 h1 每行折成 2 行，正是回归脚本要拦的「末行只剩 1~2 字」）。
+       56rem（896px）既容得下这一行，又仍不宽于正文列（实测 1920 下 928px），不会横穿大屏。 */
+    max-width: 56rem;
+  }
+  [data-layout='editorial'] .hero-line + .hero-line {
+    /* 错位随字号一起放大：两行大标题的斜向切口是大屏最有辨识度的一处。
+       但缩进吃的是同一条行盒宽度：上限减去缩进才是第二行的可用宽度，
+       所以 4.5rem 的缩进（72px）在 46rem 上限下会把第二行压得比第一行更早折。
+       缩进收到 3.5rem（56px），与 56rem 的上限配对后第二行可用 840px > 那约 800px。 */
+    padding-left: 3.5rem;
+  }
+  /* 大屏正文列 880px，而奖项/认证这类列表条目短：单列会让右侧约 340px 长期空着。
+     分成两列后宽度被真实内容吃掉，条目与发丝分割线都留在原样式里（分隔线随条目走，不会被拉长）。 */
+  [data-layout='editorial'] .entry-list--grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 3rem;
   }
 }

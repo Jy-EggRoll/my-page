@@ -6,7 +6,10 @@
   display: grid;
   grid-template-columns: 15rem minmax(0, 1fr);
   gap: 1.5rem;
-  max-width: 80rem;
+  /* 84rem：大屏是这次重做专门要修的场景，旧的 80rem 在 1920 下两侧仍各空 320px。
+     与编辑式/便当格不同，这一档的 rail 本来就在左栏，放宽 max-width 不会再压缩正文度量，
+     所以直接吃满。 */
+  max-width: 84rem;
 }
 
 /* 页头与侧栏导航占左栏；其余内容全部落右栏 */
@@ -18,6 +21,11 @@
   align-items: flex-start;
   gap: 1rem;
 }
+/*
+ * 侧栏导航（左栏，路径语言）。外壳的描边 / 圆角 / 底色 / 内边距复用 layout.css 的 .rail-nav，
+ * 这里只写「放在哪、怎么跟随阅读」以及终端自己的细节（圆角改用控制件档、路径染色）。
+ * display: flex 是必须的：.rail-nav 的基础规则是 display: none。
+ */
 [data-layout='terminal'] .rail-nav {
   display: flex;
   grid-column: 1;
@@ -25,50 +33,46 @@
   align-self: start;
   position: sticky;
   top: 1.5rem;
-  flex-direction: column;
-  gap: 0.125rem;
-  border: 1px solid var(--color-border);
   border-radius: var(--radius-control);
-  background: var(--color-surface);
-  padding: 0.75rem;
 }
 [data-layout='terminal'] .layout-shell > *:not(.site-header):not(.rail-nav) {
   grid-column: 2;
 }
 
 [data-layout='terminal'] .rail-link {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  border-radius: var(--radius-control);
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
-}
-[data-layout='terminal'] .rail-link:hover {
-  background: var(--color-surface-raised);
+  font-family: var(--font-mono);
 }
 [data-layout='terminal'] .rail-path {
-  font-family: var(--font-mono);
-  color: var(--color-accent);
+  /* 基础规则把它藏起来（只有终端版式展示路径标签） */
+  display: inline;
 }
 [data-layout='terminal'] .rail-label {
+  /* 路径与标签同为次要信息，只是字体语言不同 */
   color: var(--color-fg-muted);
 }
 
-/* 板块成为面板：标题栏 + 内容区 */
+/* 板块成为面板：标题栏 + 内容区。
+   内边距与上间距都取自章节节奏变量（layout.css 的 --rhythm-* 三档），
+   所以「核心章节更大、末端章节更紧」在终端档同样成立，而不是所有面板一样大。 */
 [data-layout='terminal'] .section-shell {
-  margin-top: 1rem;
+  margin-top: calc(var(--rhythm-gap) * 0.4);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-control);
   background: var(--color-surface);
-  padding: 1rem;
+  padding: var(--rhythm-pad);
   backdrop-filter: none;
+}
+/* major 档用更实的描边把面板从整列里抬出来（描边权重是这一档可感知差异的一部分） */
+[data-layout='terminal'] .section-shell[data-emphasis='major'] {
+  border-color: color-mix(in oklab, var(--section-color) 30%, var(--color-border));
 }
 [data-layout='terminal'] .section-masthead {
   justify-content: space-between;
   margin-bottom: 0.75rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px dashed var(--color-border);
+  /* 分隔线用 --rhythm-rule：minor 档半透明、major 档提到 border-strong，
+     线本身仍是同一条虚线（终端的工具语感靠虚线，不改成实线） */
+  border-bottom: 1px dashed var(--rhythm-rule);
 }
 [data-layout='terminal'] .section-path {
   display: inline;
@@ -186,7 +190,15 @@
   }
   /* 面板已是纵向浮层，这里只补回标题字号下限 */
   [data-layout='terminal'] .hero-headline {
-    /* 等宽字体的中文回退比 1em 更宽，360px 下 1.375rem 会让标题折出孤立单字 */
-    font-size: clamp(1.125rem, 5vw, 1.75rem);
+    /* 等宽字体的中文回退比 1em 更宽（实测约 1.45em/字，按 1em 估算会严重偏乐观），
+       所以这一档的字号上限必须按「1.45em × 11 字 + 第二行缩进 ≤ 内容宽」反推：
+       360px 内容宽 278px，缩进收到 1.5rem 后可用 254px → 字号上限约 15.9px。
+       旧的 clamp(1.125rem, 5vw, …) 在 360px 给 18px、390px 给 19.5px，
+       都会把第二行的最后两个字挤到第三行（回归实测 [11, 9, 2]）。 */
+    font-size: clamp(0.9375rem, 4.2vw, 1.75rem);
+  }
+  /* 缩进同步收窄：它是与上述字号上限配对的另一半预算（宽屏仍是 3rem 的斜向错位） */
+  [data-layout='terminal'] .hero-line + .hero-line {
+    padding-left: 1.5rem;
   }
 }

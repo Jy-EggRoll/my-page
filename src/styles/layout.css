@@ -17,22 +17,102 @@
   padding: 2.5rem 1.5rem 3rem;
 }
 
-/* 侧栏导航只有终端版式才显示 */
+/*
+ * ---------- 章节索引栏（.rail-nav） ----------
+ *
+ * 默认隐藏；三套版式各自决定它在哪、以什么形态出现（见 layouts/ 下的三份文件）。
+ * 「卡片外壳」这一层只写一次，终端与便当格直接复用，编辑式则把它改写成无边界的页边注栏。
+ *
+ * 可见性契约（scripts/verify.mjs 的版式套件）：视口 ≥1024px 时三套版式都必须显示它，
+ * 窄屏一律隐藏 —— 所以编辑式/便当格的断点取 64rem，与断言同一条线。
+ */
 .rail-nav {
   display: none;
+  flex-direction: column;
+  gap: 0.125rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 0.75rem;
+}
+.rail-link {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  border-radius: var(--radius-control);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--color-fg-muted);
+  transition:
+    color var(--default-transition-duration) var(--ease-standard),
+    background-color var(--default-transition-duration) var(--ease-standard);
+}
+.rail-link:hover {
+  background: var(--color-surface-raised);
+  color: var(--color-fg);
+}
+.rail-label {
+  color: inherit;
+}
+/* 路径标签只有终端版式展示（终端在 layouts/terminal.css 里改回 display: inline） */
+.rail-path {
+  display: none;
+  font-family: var(--font-mono);
+  color: var(--color-accent);
+}
+/*
+ * 「页边索引」形态：非终端版式把 rail 当书边索引用，所以给每条索引一个等宽两位编号，
+ * 序号由 CSS 计数器生成 —— 不新增 DOM（回归脚本的 DOM 指纹断言要求结构完全一致），
+ * 也让索引与左侧正文的「路径语言」区分开。终端版式有自己的 ~/path，不套编号。
+ */
+:root:not([data-layout='terminal']) .rail-nav {
+  counter-reset: rail-index;
+}
+:root:not([data-layout='terminal']) .rail-link::before {
+  content: counter(rail-index, decimal-leading-zero);
+  counter-increment: rail-index;
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: var(--tracking-label);
+  color: var(--color-fg-subtle);
+  /* 编号与标签首字对齐：标签用了展示体，两者基线不同，用固定宽度列对齐更稳 */
+  min-width: 1.25rem;
 }
 
 /* ---------- 书眉（标签 / 路径） ---------- */
+/*
+ * 刻度线母题：书眉左端一条 1px 宽、8px 高的竖刻度，替代「章节前面什么都没有」的裸标签。
+ * 伪元素实现，不进 DOM；颜色与高度由 [data-emphasis] 的三档节奏变量给出（见下方章节节奏），
+ * 所以强弱档的刻度会跟着变长变深。
+ */
 .section-masthead {
   display: flex;
   align-items: baseline;
-  gap: 0.75rem;
+  gap: 0.5rem;
   margin-bottom: 0.75rem;
 }
+.section-masthead::before {
+  content: '';
+  flex: none;
+  width: 1px;
+  height: var(--rhythm-tick, 0.5rem);
+  background: var(--rhythm-rule, var(--color-border));
+}
+/* 首屏书眉行是空的（编辑式把字标安放在这一行），给它挂刻度会像渲染残留 */
+.section-shell.hero .section-masthead::before {
+  content: none;
+}
 .section-label {
-  font-size: 0.875rem;
-  font-weight: 600;
+  /* 中文展示体（宋体）：字数少，只命中 1~4 个字体分片，不承担正文的下载成本 */
+  font-family: var(--font-display);
+  font-size: var(--rhythm-label-size, 0.875rem);
+  font-weight: var(--rhythm-label-weight, 600);
   color: var(--color-fg-subtle);
+}
+/* 紧凑档的标签靠字距补回存在感：字号小下去以后不再靠字重 */
+.section-shell[data-emphasis='minor'] .section-label {
+  letter-spacing: var(--tracking-label);
 }
 .section-path {
   display: none; /* 只有终端版式展示路径标签 */
@@ -41,41 +121,53 @@
   color: var(--color-fg-subtle);
 }
 
-/* ---------- 首屏 ---------- */
-/* 字号与显示行高属于版式；字距归主题（--tracking-heading），主题换了它必须跟着变。
-   text-wrap: pretty 让浏览器主动避免「末行只剩一两个字」的怪折行（窄屏尤其明显）。 */
+/* ---------- 首屏 ----------
+   字号与显示行高属于版式；字距归主题（--tracking-heading），主题换了它必须跟着变。
+   这里刻意不用 text-wrap: balance：本页大标题是「两个分句各占一行」的块级行，
+   平衡折行只会在窄屏把某一行拆成字数悬殊的两行，而回归脚本正好盯着
+   「末行不得只剩 1~2 个字」（scripts/verify.mjs 的版式套件）——pretty 才是对的那把钳子。 */
 .hero-headline {
-  font-size: clamp(1.5rem, 6vw, 3.5rem);
+  /* 展示体（中文宋体）只给大标题与章节标签：本站两位数以内的字数，字体分片成本可忽略 */
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 6vw, 4.5rem);
   font-weight: 700;
   letter-spacing: var(--tracking-heading);
-  line-height: 1.06;
+  line-height: 1.04;
   text-wrap: pretty;
 }
 .hero-line {
   display: block;
 }
+/* 第二句左缩错位：两行同级的「一句话两个分句」，靠缩进读出递进而不是标题+副标题 */
+.hero-line + .hero-line {
+  padding-left: 3rem;
+}
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-top: 1.5rem;
+  margin-top: 1.75rem;
 }
 .btn-primary,
 .btn-secondary {
   border-radius: var(--radius-control);
-  padding: 0.5rem 1.125rem;
+  padding: 0.6875rem 1.375rem;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  /* 抬起（悬停结束）走 150ms ease-out：慢停，眼睛能看清落点；
+     按下态在 :active 里另写 80ms ease-in —— 按下要「立刻响应」，两者刻意不对称。 */
   transition:
-    transform var(--default-transition-duration) var(--ease-standard),
-    box-shadow var(--default-transition-duration) var(--ease-standard),
-    opacity var(--default-transition-duration) var(--ease-standard),
-    border-color var(--default-transition-duration) var(--ease-standard),
-    color var(--default-transition-duration) var(--ease-standard);
+    transform var(--default-transition-duration) var(--ease-out),
+    box-shadow var(--default-transition-duration) var(--ease-out),
+    border-color var(--default-transition-duration) var(--ease-out),
+    background-color var(--default-transition-duration) var(--ease-out),
+    color var(--default-transition-duration) var(--ease-out);
 }
 .btn-primary {
   /* 底色仍用令牌（可测、随主题变）；渐变的尾端向主色回混，
-     避免浅色主题下按钮文字落在较浅的辅助色上而对比度不足（实测玻璃浅色曾只有 4.17:1） */
+     避免浅色主题下按钮文字落在较浅的辅助色上而对比度不足（实测玻璃浅色曾只有 4.17:1）。
+     注意 accent-2 只能当渐变尾端/描边：浅色档白字直接铺在 accent-2 上只有 3.8~4.3:1。 */
   background-color: var(--color-accent);
   background-image: linear-gradient(
     100deg,
@@ -89,8 +181,7 @@
     0 5px 14px oklch(from var(--color-accent) l c h / 0.14);
 }
 .btn-primary:hover {
-  opacity: 0.92;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   box-shadow:
     0 2px 4px oklch(from var(--color-accent) l c h / 0.26),
     0 9px 20px oklch(from var(--color-accent) l c h / 0.2);
@@ -98,27 +189,79 @@
 .btn-secondary {
   border: 1px solid var(--color-border);
   background: var(--color-surface);
+  color: var(--color-fg);
 }
 .btn-secondary:hover {
   border-color: color-mix(in oklab, var(--color-accent) 45%, var(--color-border));
   color: var(--color-accent);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: var(--elevation-card);
 }
-/* 抬起动效对前庭敏感的人不友好，跟随系统的减动效偏好关掉（与终端版式光标同一处理） */
+/* 按下态：位移归零、整体缩到 0.97，并切到 80ms 的 ease-in —— 手指按下去要有「吃住劲」的回馈 */
+.btn-primary:active,
+.btn-secondary:active {
+  transform: translateY(0) scale(0.97);
+  transition-duration: 80ms;
+  transition-timing-function: var(--ease-in);
+}
+/* 抬起与按下动效对前庭敏感的人不友好，跟随系统的减动效偏好整组关掉
+   （与终端版式的光标闪烁同一处理） */
 @media (prefers-reduced-motion: reduce) {
   .btn-primary:hover,
-  .btn-secondary:hover {
+  .btn-secondary:hover,
+  .btn-primary:active,
+  .btn-secondary:active {
     transform: none;
   }
 }
 
-/* ---------- 章节与条目 ---------- */
+/*
+ * ---------- 章节节奏 ----------
+ *
+ * 三档节奏在这里一次定义、三套版式各自消费（编辑式取 --rhythm-gap 当上间距、
+ * 终端/便当格取 --rhythm-pad 当面板内边距），因此「强弱的可感知差异」只维护一份。
+ * 每档在四个维度上同时变化，而不只是外边距：
+ *   --rhythm-gap    章节上方留白（编辑式/终端的纵向节奏）
+ *   --rhythm-pad    面板内边距（终端/便当格）
+ *   --rhythm-label-size / --rhythm-label-weight   书眉标签的字号与字重
+ *   --rhythm-rule   刻度线与分隔线的颜色权重（minor 半透明，major 提到 border-strong）
+ *   --rhythm-tick   刻度线高度
+ * 档位由 data-emphasis 给出（src/data/resume.ts 的 EMPHASIS），未登记的走「常规」。
+ */
 .section-shell {
   margin-top: 3rem;
+  --rhythm-gap: 2.25rem;
+  --rhythm-pad: 1rem;
+  --rhythm-label-size: 0.8125rem;
+  --rhythm-label-weight: 600;
+  --rhythm-rule: var(--color-border);
+  --rhythm-tick: 0.5rem;
+}
+.section-shell[data-emphasis='major'] {
+  --rhythm-gap: 3.5rem;
+  --rhythm-pad: 1.375rem;
+  --rhythm-label-size: 0.9375rem;
+  --rhythm-label-weight: 700;
+  --rhythm-rule: var(--color-border-strong);
+  --rhythm-tick: 0.75rem;
+}
+.section-shell[data-emphasis='minor'] {
+  --rhythm-gap: 1.5rem;
+  --rhythm-pad: 0.875rem;
+  --rhythm-label-size: 0.75rem;
+  --rhythm-label-weight: 500;
+  --rhythm-rule: color-mix(in oklab, var(--color-border) 55%, transparent);
+  --rhythm-tick: 0.5rem;
 }
 .prose {
   color: var(--color-fg-muted);
   line-height: var(--leading-body);
+  /* 末行不留 1~2 个字的孤字：这条质量线原先只由 .hero-headline 承担，
+     实测正文与条目摘要在多数宽度下都有 2 字末行（回归脚本的版式套件盯的就是它） */
+  text-wrap: pretty;
+  /* 中文正文的行宽上限：约 34 个汉字/行。超过这个宽度眼睛回行会丢行，
+     所以宽屏宁可把多出来的空间交给栏距与页边索引，也不把正文拉成横条。 */
+  max-width: 34rem;
 }
 .prose + .prose {
   margin-top: 0.75rem;
@@ -128,6 +271,8 @@
   font-size: 0.9375rem;
   font-weight: 600;
   letter-spacing: var(--tracking-heading);
+  /* 标题同样受「末行不留 1~2 个字」约束：少字标题在窄栏里最容易被最后两个字甩到下一行 */
+  text-wrap: pretty;
 }
 .entry-subtitle {
   font-size: 0.75rem;
@@ -141,6 +286,8 @@
 .entry-detail {
   color: var(--color-fg-muted);
   line-height: var(--leading-body);
+  /* 条目摘要是孤字的重灾区（便当格窄栏尤其），与 .prose 同一条质量线 */
+  text-wrap: pretty;
 }
 .entry-link {
   transition: color var(--default-transition-duration) var(--ease-standard);
@@ -188,7 +335,10 @@
   }
 }
 
-/* 熟练度（技能 / 语言）：五点方块 */
+/* 熟练度（技能 / 语言）：五段刻度尺，而不是五个圆点。
+   圆点在「5 点里的第 4 点」这种语义上要靠数数才能读出来；竖条刻度是一把尺，
+   一瞥就能比较，也与书眉的刻度线母题同源。
+   类名与 .is-on 状态类不能改：DOM 契约与回归脚本依赖它们（终端版式会把它们改成方块）。 */
 .entry-list--meter {
   display: flex;
   flex-direction: column;
@@ -203,12 +353,13 @@
 .entry-level {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 2px;
 }
 .entry-level-cell {
-  width: 0.375rem;
-  height: 0.375rem;
-  border-radius: var(--radius-pill);
+  /* 2px 宽、10px 高、2px 间隙（间隙在 .entry-level 的 gap 上） */
+  flex: none;
+  width: 2px;
+  height: 10px;
   background: var(--color-border);
 }
 .entry-level-cell.is-on {
@@ -256,7 +407,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
   background: var(--color-surface-raised);
-  /* 亚克力/玻璃主题的毛玻璃令牌（material 为 none，等于没有这一层）；
+  /* 亚克力/玻璃质感走 --panel-backdrop；不需要毛玻璃的主题把它设为 none，等于没有这一层。
      不写死模糊半径，主题改令牌即可。
      毛玻璃只留在这里：控件条面积小、又确实是浮在页面之上的一层控件。
      内容面板一律不申请毛玻璃 —— 它们底下只有固定的柔和渐变背景，模糊与不模糊
@@ -290,7 +441,9 @@
   /* 不额外拉字距：分组名占的宽直接吃掉控件条的宽度预算（编辑式内容宽仅 912px），
      靠字号、字重与颜色区分即可 */
   white-space: nowrap;
-  color: var(--color-fg-subtle);
+  /* 分组名落在 --color-surface-raised 上：实测 subtle 在这个底上只有 3.5~4.5:1（全部主题不达 AA），
+     所以这里必须用 muted。raised 底色本身没问题，不要为了这一条去改控件条的底色。 */
+  color: var(--color-fg-muted);
   user-select: none;
 }
 /* 语言分组的外壳在 SiteHeader 里，内层 nav 只保留语义：
@@ -301,8 +454,11 @@
 }
 .appearance-option {
   border-radius: var(--radius-chip);
-  /* 横向 7px（原 8px）：高度不变（22px），只把整条压窄一点以容纳分组名 */
-  padding: 0.125rem 0.4375rem;
+  /* 横向 7px（原 8px）：只把整条压窄一点以容纳分组名。
+     纵向 3px + min-height 24px（WCAG 2.2 SC 2.5.8）：这个控件是真实可点的，
+     只补高度不补宽度 —— 编辑式宽屏要把「品牌 + 整条控件 + 右侧索引栏」挤在一行里 */
+  min-height: 1.5rem;
+  padding: 0.1875rem 0.4375rem;
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--color-fg-muted);
@@ -425,29 +581,37 @@
   border-left-color: color-mix(in oklab, var(--section-color) 40%, var(--color-border));
 }
 
-/* 标签芯片：底色与文字都取自所在板块的色相；文字向正文色混合的比例要够，
-   否则浅色主题下会低于 AA（实测色相色 75% 时玻璃浅色只有 4.46:1） */
+/* 标签芯片：从「一块灰底药丸」改成「细描边 + 极淡底的刻度牌」。
+   描边取自板块色相与描边令牌的混合（装饰，不承担识别），文字仍是
+   「板块色相 58% + 正文色」——58% 这条线是实测定下来的（浅色主题下再往上提就跌破 AA），
+   不要为了「更安静」把文字色压回去；安静感由字号、等宽字体与细描边提供。 */
 .entry-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 .entry-chip {
+  /* 芯片是站内出现最频繁的小元素，11px 的中文在系统字体栈下笔画会糊，统一到 12px；
+     inline-flex + min-height 让它与控件同高（24px），不再比旁边的按钮矮一截 */
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  border: 1px solid
+    color-mix(in oklab, var(--section-color, var(--color-accent)) 28%, var(--color-border));
   border-radius: var(--radius-chip);
   padding: 0.125rem 0.5rem;
+  font-family: var(--font-mono);
   font-size: 0.75rem;
   font-weight: 500;
-  background: color-mix(in oklab, var(--section-color, var(--color-accent)) 18%, transparent);
+  letter-spacing: 0.01em;
+  background: color-mix(in oklab, var(--section-color, var(--color-accent)) 10%, transparent);
   color: color-mix(in oklab, var(--section-color, var(--color-accent)) 58%, var(--color-fg));
 }
 
-/* ---------- 章节强弱：核心经历与作品给更大版面权重 ---------- */
-.section-shell[data-emphasis='major'] {
-  margin-top: 4rem;
-}
+/* 核心经历与作品（major 档）：标题再大一档，标签向正文色多混一档形成更实的前景。
+   上间距/标签字号/线权重已经由上面的 --rhythm-* 三档接管，这里只补「文字本身」的差异。 */
 .section-shell[data-emphasis='major'] .section-label {
-  font-size: 1rem;
-  color: var(--color-fg);
+  color: color-mix(in oklab, var(--section-color) 45%, var(--color-fg));
 }
 .section-shell[data-emphasis='major'] .entry-title {
   font-size: 1.0625rem;
@@ -622,4 +786,44 @@
 .site-footer-credit {
   font-weight: 500;
   color: var(--color-fg);
+}
+/* 构建说明属于「机器写的元信息」，用等宽字体与上面的品牌区分开；
+   刻意不写 font-size：窄屏那条媒体查询已经把 .site-footer 提到 13px，继承比另写一个值安全 */
+.site-footer-note {
+  font-family: var(--font-mono);
+}
+
+/* ---------- 联系方式 ---------- */
+/*
+ * 卡片本体（圆角 / 描边 / 表面 / 阴影）由组件上的原子类给出，这里只补「抬起」的动效语言，
+ * 与按钮同一套缓动。两条纪律：
+ *   1. transition 必须把 box-shadow 一起写上 —— layout.css 不带 @layer，会整条覆盖原子类的
+ *      transition-shadow，漏写就变成「位移有过渡、阴影瞬变」。
+ *   2. 编辑式版式把这些行去卡片化成发丝线清单，位移会破坏线与线的对齐，所以只给卡片形态用。
+ */
+.contact-list a {
+  transition:
+    transform var(--default-transition-duration) var(--ease-out),
+    box-shadow var(--default-transition-duration) var(--ease-out);
+}
+:root:not([data-layout='editorial']) .contact-list a:hover {
+  transform: translateY(-2px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .contact-list a:hover {
+    transform: none;
+  }
+}
+
+/* ---------- 统计卡片（两张 SVG） ---------- */
+/*
+ * 尺寸交给 CSS：图片属性上的 width=360/height=210 只当首屏占位与宽高比声明。
+ * 固定 360px 曾让便当格里这一整行（12 列）只被两条窄图占住，右侧全是空白。
+ * 圆角走令牌，与卡片语言一致；两张图的显隐仍由 theme.css 的明暗令牌控制。
+ */
+.stats-light,
+.stats-dark {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-control);
 }
